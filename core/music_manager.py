@@ -10,10 +10,10 @@ class Track:
     def __init__(self, title: str, url: str, stream_url: str, requested_by: discord.Member,
                  web_url: str, thumbnail: Optional[str] = None):
         self.title = title
-        self.url = url          # input link or id
+        self.url = url          
         self.stream_url = stream_url
         self.requested_by = requested_by
-        self.web_url = web_url  # webpage_url để mở
+        self.web_url = web_url
         self.thumbnail = thumbnail
 
 class GuildMusic:
@@ -23,6 +23,7 @@ class GuildMusic:
         self.current: Optional[Track] = None
         self.volume = 1.0
         self.player_task: Optional[asyncio.Task] = None
+        self.loop = False 
 
 class MusicManager:
     def __init__(self, bot: commands.Bot):
@@ -36,7 +37,7 @@ class MusicManager:
 
     async def ensure_voice(self, ctx: commands.Context, target_channel: Optional[discord.VoiceChannel] = None):
         if not ctx.author.voice or not ctx.author.voice.channel:
-            raise commands.CommandError("Bạn cần vào một kênh voice trước.")
+            raise commands.CommandError("You need to join a voice channel first.")
         channel = target_channel or ctx.author.voice.channel
         if ctx.voice_client:
             if ctx.voice_client.channel != channel:
@@ -77,7 +78,6 @@ class MusicManager:
 
     async def _player_loop(self, ctx: commands.Context):
         gm = self.get_guild(ctx.guild)
-        vc = ctx.voice_client
         try:
             while True:
                 if not gm.queue:
@@ -87,34 +87,27 @@ class MusicManager:
                 track = gm.queue.popleft()
                 gm.current = track
 
-                # Tạo source lần đầu
                 source = self._create_source(track.stream_url)
                 source.volume = gm.volume
 
-                # Chạy với logic retry 1 lần nếu lỗi sớm
                 attempts = 0
                 while attempts < 2:
-                    # Đảm bảo voice kết nối
                     vc = ctx.voice_client
                     if not vc or not vc.is_connected():
                         try:
                             await self.ensure_voice(ctx)
                             vc = ctx.voice_client
                         except Exception:
-                            # Không thể kết nối voice => bỏ bài
                             break
 
                     vc.play(source)
 
-                    # Theo dõi phát
                     start_ts = asyncio.get_event_loop().time()
                     while vc.is_playing() or vc.is_paused():
                         await asyncio.sleep(0.5)
 
-                    # Nếu chơi < 10s coi như lỗi stream, refetch và thử lại
                     play_dur = asyncio.get_event_loop().time() - start_ts
                     if play_dur < 10 and attempts == 0:
-                        # Refetch stream url
                         try:
                             from utils.ytdl import get_stream_url
                             new_url = await get_stream_url(track.web_url)
@@ -123,16 +116,17 @@ class MusicManager:
                                 source = self._create_source(track.stream_url)
                                 source.volume = gm.volume
                                 attempts += 1
-                                continue  # thử phát lại
+                                continue
                         except Exception:
                             pass
-                    # Phát xong bình thường hoặc đã retry -> thoát vòng
-                    break
+                    break  
+
+                if gm.loop:
+                    gm.queue.appendleft(track)
 
                 gm.current = None
 
         finally:
-            # Auto-leave chỉ khi rảnh hoàn toàn trong IDLE_LEAVE_SECONDS
             vc = ctx.voice_client
             if not vc:
                 return
@@ -140,12 +134,10 @@ class MusicManager:
             while idle < IDLE_LEAVE_SECONDS:
                 gm = self.get_guild(ctx.guild)
                 if vc.is_playing() or vc.is_paused() or gm.queue or gm.current:
-                    # Có hoạt động -> không rời
-                    return
+                    return  
                 await asyncio.sleep(1)
                 idle += 1
-            # Idle đủ lâu -> rời
-            await self._cleanup(ctx)
+            await self._cleanup(ctx)  
 
     async def _cleanup(self, ctx: commands.Context):
         gm = self.get_guild(ctx.guild)

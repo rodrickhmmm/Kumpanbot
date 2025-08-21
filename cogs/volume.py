@@ -13,12 +13,12 @@ class Volume(commands.Cog):
     @commands.command(name="volume", aliases=["vol"])
     async def volume(self, ctx: commands.Context, vol: int = None):
         if vol is None:
-            return await ctx.reply("Dùng: `o!vol <0-200>`")
+            return await ctx.reply("Usage: `o!vol <0-200>`")
         if not 0 <= vol <= 200:
-            return await ctx.reply("Âm lượng phải từ 0 đến 200.")
+            return await ctx.reply("Volume must be between 0 and 200.")
         vc = ctx.voice_client
         if not vc:
-            return await ctx.reply("Bot chưa ở trong voice.")
+            return await ctx.reply("The bot is not in a voice channel.")
         get_manager(self.bot).set_volume(vc, vol / 100.0)
         await ctx.reply(f"🔊 Volume: {vol}%")
 

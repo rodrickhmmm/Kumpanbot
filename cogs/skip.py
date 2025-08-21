@@ -13,9 +13,9 @@ class Skip(commands.Cog):
     @commands.command(name="skip", aliases=["s"])
     async def skip(self, ctx: commands.Context):
         if not ctx.voice_client:
-            return await ctx.reply("Bot chưa ở trong voice.")
+            return await ctx.reply("The bot is not in a voice channel.")
         await get_manager(self.bot).skip(ctx)
-        await ctx.reply("⏭️ Đã bỏ qua.")
+        await ctx.reply("⏭️ Skipped.")
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(Skip(bot))

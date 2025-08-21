@@ -17,19 +17,19 @@ class Queue(commands.Cog):
         gm = mgr.get_guild(ctx.guild)
 
         if gm.current is None and not gm.queue:
-            return await ctx.reply("Hàng đợi trống.")
+            return await ctx.reply("Queue is empty.")
 
         desc = ""
         if gm.current:
-            desc += f"**Đang phát:** [{gm.current.title}]({gm.current.web_url}) (yêu cầu bởi {gm.current.requested_by.mention})\n\n"
+            desc += f"**Now playing:** [{gm.current.title}]({gm.current.web_url}) (requested by {gm.current.requested_by.mention})\n\n"
 
         if gm.queue:
             for i, t in enumerate(list(gm.queue)[:10], start=1):
                 desc += f"{i}. [{t.title}]({t.web_url}) • req: {t.requested_by.mention}\n"
             if len(gm.queue) > 10:
-                desc += f"... và {len(gm.queue) - 10} bài nữa.\n"
+                desc += f"... and {len(gm.queue) - 10} more tracks.\n"
 
-        embed = discord.Embed(title="Hàng đợi", description=desc, color=discord.Color.orange())
+        embed = discord.Embed(title="Queue", description=desc, color=discord.Color.light_embed())
         await ctx.reply(embed=embed)
 
 async def setup(bot: commands.Bot):

@@ -15,15 +15,15 @@ class NowPlaying(commands.Cog):
     async def nowplaying(self, ctx: commands.Context):
         gm = get_manager(self.bot).get_guild(ctx.guild)
         if not gm.current:
-            return await ctx.reply("Không có bài nào đang phát.")
+            return await ctx.reply("No song is currently playing.")
         e = discord.Embed(
-            title="Đang phát",
+            title="Now playing",
             description=f"[{gm.current.title}]({gm.current.web_url})",
-            color=discord.Color.purple()
+            color=discord.Color.light_embed()
         )
         if gm.current.thumbnail:
             e.set_thumbnail(url=gm.current.thumbnail)
-        e.add_field(name="Yêu cầu bởi", value=gm.current.requested_by.mention)
+        e.add_field(name="Requested by", value=gm.current.requested_by.mention)
         await ctx.reply(embed=e)
 
 async def setup(bot: commands.Bot):

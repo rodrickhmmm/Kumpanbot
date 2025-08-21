@@ -1,16 +1,13 @@
-# utils/ytdl.py
 import asyncio
 from typing import List, Dict, Optional
 import yt_dlp
 
-# Logger im lặng để không spam WARNING:
 class _SilentLogger:
     def debug(self, msg): pass
     def info(self, msg): pass
     def warning(self, msg): pass
     def error(self, msg): pass
 
-# Cấu hình mặc định (fallback = android để né SABR)
 YTDL_BASE_OPTS = {
     "format": "bestaudio/best",
     "quiet": True,
@@ -22,19 +19,15 @@ YTDL_BASE_OPTS = {
     "noplaylist": True,
     "source_address": "0.0.0.0",
     "extract_flat": False,
-    # Né SABR và ưu tiên audio có URL trực tiếp
     "extractor_args": {
         "youtube": {
-            # Mặc định để android (sẽ dùng khi fallback)
-            "player_client": ["android"],
+            "player_client": ["android"],  # fallback
         }
     },
-    # Ưu tiên audio có bitrate/tần số tốt
     "format_sort": ["asr", "abr", "tbr", "acodec", "ext"],
 }
 
 def _opts_with_player_client(player: str) -> Dict:
-    """Tạo bản sao options với player_client thay đổi."""
     opts = dict(YTDL_BASE_OPTS)
     ea = dict(opts.get("extractor_args", {}))
     yt = dict(ea.get("youtube", {}))
@@ -43,7 +36,6 @@ def _opts_with_player_client(player: str) -> Dict:
     opts["extractor_args"] = ea
     return opts
 
-# Dùng cho search: cần flat để lấy metadata nhanh
 YTDL_SEARCH_OPTS = {
     **YTDL_BASE_OPTS,
     "extract_flat": "discard_in_playlist",
@@ -53,18 +45,12 @@ def _is_url(query: str) -> bool:
     return query.startswith("http://") or query.startswith("https://")
 
 async def _extract_info_with_opts(query: str, opts: Dict, download: bool = False) -> Dict:
-    """Chạy yt-dlp trong thread để không block event loop."""
     def _runner():
         with yt_dlp.YoutubeDL(opts) as ydl:
             return ydl.extract_info(query, download=download)
     return await asyncio.to_thread(_runner)
 
 async def extract_info(query: str, download: bool = False) -> Dict:
-    """
-    Thử lấy info với player_client=web_creator trước (ít cảnh báo, ít SABR),
-    nếu lỗi hoặc không có formats phù hợp thì fallback về android.
-    """
-    # 1) Thử web_creator
     try:
         info = await _extract_info_with_opts(query, _opts_with_player_client("web_creator"), download)
         if info:
@@ -73,8 +59,6 @@ async def extract_info(query: str, download: bool = False) -> Dict:
                 return info
     except Exception:
         pass
-
-    # 2) Fallback android
     try:
         return await _extract_info_with_opts(query, _opts_with_player_client("android"), download)
     except Exception:
@@ -102,33 +86,18 @@ async def search_yt(query: str, limit: int = 5) -> List[Dict]:
     return results
 
 async def get_stream_url(link_or_id: str) -> Optional[str]:
-    """
-    Lấy direct audio stream URL cho ffmpeg (ưu tiên audio formats, né fragments).
-    """
     info = await extract_info(link_or_id, download=False)
     if not info:
         return None
-
-    # Nếu là search/playlist
     if "entries" in info:
         info = next((e for e in info["entries"] if e), None)
         if not info:
             return None
-
     fmts = info.get("formats") or []
-
-    # Lọc format audio có URL trực tiếp
-    audio_formats = [
-        f for f in fmts
-        if f.get("acodec") not in (None, "none") and f.get("url")
-    ]
-
+    audio_formats = [f for f in fmts if f.get("acodec") not in (None, "none") and f.get("url")]
     if audio_formats:
-        # Chọn format "tốt" theo abr/asr/tbr
         def keyfmt(f):
             return (f.get("abr") or 0, f.get("asr") or 0, f.get("tbr") or 0)
         best = max(audio_formats, key=keyfmt)
         return best.get("url")
-
-    # Fallback cuối
     return info.get("url")

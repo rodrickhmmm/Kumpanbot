@@ -1,4 +1,3 @@
-# cogs/play.py
 import asyncio
 import contextlib
 import discord
@@ -30,20 +29,16 @@ class Play(commands.Cog):
 
     @commands.command(name="play", aliases=["p"])
     async def play(self, ctx: commands.Context, *, query: Optional[str] = None):
-        """o!play <tên bài> -> gợi ý top 5 + chọn bằng reaction
-           o!play <link YouTube> -> phát ngay"""
         if not query:
-            return await ctx.reply("Dùng: `o!play <tên bài hát>` hoặc `o!play <link YouTube>`")
+            return await ctx.reply("Usage: `o!play <song name>` or `o!play <YouTube link>`")
 
         mgr = get_manager(self.bot)
-        await mgr.ensure_voice(ctx)
 
-        # Nếu là link -> phát luôn
         if query.startswith(("http://", "https://")):
+            await mgr.ensure_voice(ctx)
             stream = await get_stream_url(query)
             if not stream:
-                return await ctx.reply("Không lấy được stream từ link này.")
-            # Lấy meta để hiển thị
+                return await ctx.reply("Could not retrieve stream from this link.")
             results = await search_yt(query, limit=1)
             meta = results[0] if results else {"title": "Unknown", "thumbnail": None, "url": query}
             track = Track(
@@ -55,33 +50,35 @@ class Play(commands.Cog):
                 thumbnail=meta.get("thumbnail")
             )
             await mgr.add_track(ctx, track)
-            return await ctx.reply(f"🎵 Đã thêm: **{track.title}**")
+            return await ctx.reply(f"🎵 Added: **{track.title}**")
 
-        # Tìm kiếm top 5
         results = await search_yt(query, limit=SEARCH_RESULTS)
         if not results:
-            return await ctx.reply("Không tìm thấy kết quả nào.")
+            return await ctx.reply("No results found.")
 
         embed = discord.Embed(
-            title=f"Kết quả cho: {query}",
+            title=f"Results for: {query}",
             description="\n".join(
                 f"{i+1}. **{r['title']}** · `{'N/A' if r['duration'] is None else fmt_duration(r['duration'])}`"
                 for i, r in enumerate(results)
             ),
-            color=discord.Color.green()
+            color=discord.Color.light_embed()
         )
         thumb = results[0].get("thumbnail")
         if thumb:
             embed.set_thumbnail(url=thumb)
-        embed.set_footer(text=f"Chọn bằng reaction 1️⃣–{len(results)} trong {REACT_TIMEOUT}s")
+        embed.set_footer(text=f"Wait and react with 1️⃣ to 5️⃣ within {REACT_TIMEOUT}s")
 
         msg = await ctx.reply(embed=embed)
-        for i in range(len(results)):
-            await msg.add_reaction(NUMBER_EMOJIS[i])
+
+        add_tasks = [msg.add_reaction(NUMBER_EMOJIS[i]) for i in range(len(results))]
+        await asyncio.gather(*add_tasks, return_exceptions=True)
+        ready = True  
 
         def check(reaction: discord.Reaction, user: discord.User):
             return (
-                reaction.message.id == msg.id
+                ready
+                and reaction.message.id == msg.id
                 and str(reaction.emoji) in NUMBER_EMOJIS[:len(results)]
                 and user.id == ctx.author.id
             )
@@ -91,13 +88,16 @@ class Play(commands.Cog):
         except asyncio.TimeoutError:
             with contextlib.suppress(discord.Forbidden):
                 await msg.clear_reactions()
-            return await ctx.send("⏱️ Hết thời gian chọn.")
+            return await ctx.send("⏱️ Selection timed out. Please try again.")
 
         index = NUMBER_EMOJIS.index(str(reaction.emoji))
         chosen = results[index]
+
+        await mgr.ensure_voice(ctx)
+
         stream = await get_stream_url(chosen["url"])
         if not stream:
-            return await ctx.reply("Không lấy được stream từ video này.")
+            return await ctx.reply("Could not retrieve stream from this link.")
 
         track = Track(
             title=chosen["title"],
@@ -110,13 +110,13 @@ class Play(commands.Cog):
         await mgr.add_track(ctx, track)
 
         confirm = discord.Embed(
-            title="Đã thêm vào hàng đợi",
+            title="Added to queue",
             description=f"**{track.title}**",
-            color=discord.Color.blurple()
+            color=discord.Color.light_embed()
         )
         if track.thumbnail:
             confirm.set_thumbnail(url=track.thumbnail)
-        confirm.add_field(name="Yêu cầu bởi", value=ctx.author.mention)
+        confirm.add_field(name="Requested by", value=ctx.author.mention)
         await ctx.reply(embed=confirm)
 
 async def setup(bot: commands.Bot):

@@ -7,9 +7,9 @@ class Leave(commands.Cog):
     @commands.command(name="leave", aliases=["disconnect"])
     async def leave(self, ctx: commands.Context):
         if not ctx.voice_client:
-            return await ctx.reply("Bot không ở trong voice.")
+            return await ctx.reply("The bot is not in a voice channel.")
         await ctx.voice_client.disconnect(force=True)
-        await ctx.reply("👋 Đã rời kênh voice.")
+        await ctx.reply("👋 Left the voice channel.")
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(Leave(bot))
