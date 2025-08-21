@@ -46,7 +46,7 @@ Install FFmpeg and Python
 https://ffmpeg.org/  
 https://www.python.org/
 
-Install Python package
+Install required Python packages
 
 ```bash
 python -m pip install --upgrade pip
