@@ -49,8 +49,8 @@ https://www.python.org/
 Install required Python packages
 
 ```bash
-python -m pip install --upgrade pip
-python -m pip install "discord.py[voice]==2.6.0" yt-dlp
+py -m pip install --upgrade pip
+py -m pip install "discord.py[voice]==2.6.0" yt-dlp
 ```
 
 Setup Discord Bot
