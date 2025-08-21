@@ -63,7 +63,7 @@ Setup Discord Bot
 
 Run bot
 ```bash
-python oguri.py
+py oguri.py
 ````
 
 ## FAQ
