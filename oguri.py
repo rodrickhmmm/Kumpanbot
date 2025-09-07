@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-TOKEN = "YOUR_TOKEN_HERE" # Replace with your bot's token
+TOKEN = "your_bot_token_here" # Replace with your bot's token
 
 # Intents
 intents = discord.Intents.default()
@@ -13,7 +13,7 @@ intents.reactions = True
 COG_MODULES = [
     "play", "skip", "stop", "pause", "resume",
     "queue", "nowplaying", "volume", "join", "leave",
-    "loop",
+    "loop", "ping",
 ]
 
 class MusicBot(commands.Bot):
@@ -57,7 +57,8 @@ async def help_cmd(ctx: commands.Context):
     embed.add_field(name="o!queue", value="View the queue", inline=True)
     embed.add_field(name="o!np", value="Now playing", inline=True)
     embed.add_field(name="o!vol <0-200>", value="Volume", inline=True)
-    embed.add_field(name="o!join / o!leave", value="Call the bot to join/leave the voice channel.", inline=False)
+    embed.add_field(name="o!join / o!leave", value="Call the bot to join/leave the voice channel.", inline=True)
+    embed.add_field(name="o!ping", value="Check the bot's current latency in milliseconds.", inline=False)
     await ctx.reply(embed=embed)
 
 if __name__ == "__main__":
