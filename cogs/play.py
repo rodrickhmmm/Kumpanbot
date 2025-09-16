@@ -24,6 +24,66 @@ def fmt_duration(seconds) -> str:
     return f"{h:d}:{m:02d}:{s:02d}" if h else f"{m:d}:{s:02d}"
 
 class Play(commands.Cog):
+    from discord import app_commands
+
+    @app_commands.command(name="play", description="Přehraje hudbu podle názvu nebo odkazu.")
+    async def play_slash(self, interaction: discord.Interaction, query: str):
+        user = interaction.user
+        await interaction.response.defer()
+        if not isinstance(user, discord.Member):
+            await interaction.followup.send("This command can only be used in a server.", ephemeral=True)
+            return
+        mgr = get_manager(self.bot)
+        # Direct link
+        if query.startswith(("http://", "https://")):
+            await mgr.ensure_voice(interaction)
+            stream = await get_stream_url(query)
+            if not stream:
+                await interaction.followup.send("Could not retrieve stream from this link.", ephemeral=True)
+                return
+            results = await search_yt(query, limit=1)
+            meta = results[0] if results else {"title": "Unknown", "thumbnail": None, "url": query}
+            track = Track(
+                title=meta.get("title") or "Unknown",
+                url=query,
+                stream_url=stream,
+                requested_by=user,
+                web_url=meta.get("url") or query,
+                thumbnail=meta.get("thumbnail")
+            )
+            await mgr.add_track(interaction, track)
+            await interaction.followup.send(f"🎵 Added: **{track.title}**")
+            return
+
+        # Search and add first result
+        results = await search_yt(query, limit=1)
+        if not results:
+            await interaction.followup.send("No results found.", ephemeral=True)
+            return
+        chosen = results[0]
+        await mgr.ensure_voice(interaction)
+        stream = await get_stream_url(chosen["url"])
+        if not stream:
+            await interaction.followup.send("Could not retrieve stream from this link.", ephemeral=True)
+            return
+        track = Track(
+            title=chosen["title"],
+            url=chosen["url"],
+            stream_url=stream,
+            requested_by=user,
+            web_url=chosen["url"],
+            thumbnail=chosen.get("thumbnail")
+        )
+        await mgr.add_track(interaction, track)
+        embed = discord.Embed(
+            title="Added to queue",
+            description=f"**{track.title}**",
+            color=discord.Color.light_embed()
+        )
+        if track.thumbnail:
+            embed.set_thumbnail(url=track.thumbnail)
+        embed.add_field(name="Requested by", value=user.mention)
+        await interaction.followup.send(embed=embed)
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 

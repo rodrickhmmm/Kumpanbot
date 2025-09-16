@@ -20,8 +20,9 @@ class KumpanBot(commands.Bot):
     async def setup_hook(self):
         for name in COG_MODULES:
             await self.load_extension(f"cogs.{name}")
-        # Sync slash commands
-        await self.tree.sync()
+        # Sync slash commands instantly to your test guild
+        guild = discord.Object(id=948315626131300402)
+        await self.tree.sync(guild=guild)
 
 bot = KumpanBot(
     command_prefix=commands.when_mentioned_or("k!", "K!"),
@@ -36,6 +37,7 @@ async def on_ready():
     await bot.change_presence(
         activity=discord.Activity(type=discord.ActivityType.listening, name="Vráťa Hošek")
     )
+    await bot.tree.sync()  # Ensure slash commands are synced
 
 @bot.event
 async def on_command_error(ctx: commands.Context, error: commands.CommandError):
@@ -80,6 +82,9 @@ async def help_slash(interaction: discord.Interaction):
     embed.add_field(name="/join / /leave", value="Přivolej bota do voicu / Leavne voice", inline=True)
     embed.add_field(name="/ping", value="Zkontroluj aktuální odezvu bota v milisekundách", inline=False)
     await interaction.response.send_message(embed=embed, ephemeral=True)
+
+guild_id = 948315626131300402
+test_guild = discord.Object(id=guild_id)
 
 if __name__ == "__main__":
     if TOKEN.count(".") != 2 or any(c.isspace() for c in TOKEN):

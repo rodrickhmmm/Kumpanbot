@@ -1,6 +1,25 @@
+import discord
 from discord.ext import commands
 
 class Resume(commands.Cog):
+    from discord import app_commands
+
+    @app_commands.command(name="resume", description="Pokračuje v přehrávání hudby.")
+    async def resume_slash(self, interaction):
+        user = interaction.user
+        if not isinstance(user, discord.Member):
+            await interaction.response.send_message("This command can only be used in a server.", ephemeral=True)
+            return
+        guild = interaction.guild
+        vc = guild.voice_client if guild else None
+        if not vc:
+            await interaction.response.send_message("The bot is not in a voice channel.", ephemeral=True)
+            return
+        if not vc.is_paused():
+            await interaction.response.send_message("The music is not paused.", ephemeral=True)
+            return
+        vc.resume()
+        await interaction.response.send_message("▶️ Resumed playing.")
     def __init__(self, bot): 
         self.bot = bot
 

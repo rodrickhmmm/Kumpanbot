@@ -9,6 +9,18 @@ def get_manager(bot: commands.Bot) -> MusicManager:
     return bot.music
 
 class Loop(commands.Cog):
+    from discord import app_commands
+
+    @app_commands.command(name="loop", description="Zapne/vypne opakování aktuální skladby.")
+    async def loop_slash(self, interaction):
+        user = interaction.user
+        if not isinstance(user, discord.Member):
+            await interaction.response.send_message("This command can only be used in a server.", ephemeral=True)
+            return
+        mgr = get_manager(self.bot)
+        gm = mgr.get_guild(interaction.guild)
+        gm.loop = not gm.loop
+        await interaction.response.send_message(f"🔁 Loop is now **{'enabled' if gm.loop else 'disabled'}**.")
     def __init__(self, bot):
         self.bot = bot
 
