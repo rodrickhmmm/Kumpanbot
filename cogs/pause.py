@@ -4,7 +4,7 @@ from discord.ext import commands
 class Pause(commands.Cog):
     from discord import app_commands
 
-    @app_commands.command(name="pause", description="Pozastaví aktuální hudbu.")
+    @app_commands.command(name="pauzni", description="Pozastaví aktuální hudbu.")
     async def pause_slash(self, interaction):
         user = interaction.user
         if not isinstance(user, discord.Member):
@@ -23,7 +23,7 @@ class Pause(commands.Cog):
     def __init__(self, bot): 
         self.bot = bot
 
-    @commands.command(name="pause")
+    @commands.command(name="pauzni")
     async def pause(self, ctx: commands.Context):
         vc = ctx.voice_client
         if not vc or not vc.is_playing():

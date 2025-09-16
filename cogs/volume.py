@@ -11,7 +11,7 @@ def get_manager(bot: commands.Bot) -> MusicManager:
 class Volume(commands.Cog):
     from discord import app_commands
 
-    @app_commands.command(name="volume", description="Nastaví hlasitost bota (0-200).")
+    @app_commands.command(name="hlasitost", description="Nastaví hlasitost bota (0-200).")
     async def volume_slash(self, interaction, vol: int):
         user = interaction.user
         if not isinstance(user, discord.Member):
@@ -30,7 +30,7 @@ class Volume(commands.Cog):
     def __init__(self, bot): 
         self.bot = bot
 
-    @commands.command(name="volume", aliases=["vol"])
+    @commands.command(name="hlasitost", aliases=["hlas"])
     async def volume(self, ctx: commands.Context, vol: int = None):
         if vol is None:
             return await ctx.reply("Usage: `o!vol <0-200>`")

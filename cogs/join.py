@@ -16,14 +16,14 @@ class Join(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name="join")
+    @commands.command(name="pripoj")
     async def join(self, ctx: commands.Context):
         if not ctx.author.voice or not ctx.author.voice.channel:
             return await ctx.reply("You need to **join a voice channel** first.")
         await get_manager(self.bot).ensure_voice(ctx)
         await ctx.reply("✅ Joined your voice channel.")
         
-    @app_commands.command(name="join", description="Bot se joine do chcallu.")
+    @app_commands.command(name="pripoj", description="Bot se joine do chcallu.")
     async def join(self, interaction: discord.Interaction):
         user = interaction.user
         if not isinstance(user, discord.Member):

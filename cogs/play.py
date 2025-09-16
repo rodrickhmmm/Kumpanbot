@@ -26,7 +26,7 @@ def fmt_duration(seconds) -> str:
 class Play(commands.Cog):
     from discord import app_commands
 
-    @app_commands.command(name="play", description="Přehraje hudbu podle názvu nebo odkazu.")
+    @app_commands.command(name="hraj", description="Přehraje hudbu podle názvu nebo odkazu.")
     async def play_slash(self, interaction: discord.Interaction, query: str):
         user = interaction.user
         await interaction.response.defer()
@@ -87,7 +87,7 @@ class Play(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.command(name="play", aliases=["p"])
+    @commands.command(name="hraj", aliases=["h"])
     async def play(self, ctx: commands.Context, *, query: Optional[str] = None):
         if not query:
             return await ctx.reply("Usage: `o!play <song name>` or `o!play <YouTube link>`")

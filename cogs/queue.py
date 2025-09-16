@@ -10,7 +10,7 @@ def get_manager(bot: commands.Bot) -> MusicManager:
 class Queue(commands.Cog):
     from discord import app_commands
 
-    @app_commands.command(name="queue", description="Zobrazí frontu skladeb.")
+    @app_commands.command(name="fronta", description="Zobrazí frontu skladeb.")
     async def queue_slash(self, interaction):
         user = interaction.user
         if not isinstance(user, discord.Member):
@@ -34,7 +34,7 @@ class Queue(commands.Cog):
     def __init__(self, bot): 
         self.bot = bot
 
-    @commands.command(name="queue", aliases=["q"])
+    @commands.command(name="fronta", aliases=["f"])
     async def queue(self, ctx: commands.Context):
         mgr = get_manager(self.bot)
         gm = mgr.get_guild(ctx.guild)

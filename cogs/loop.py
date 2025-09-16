@@ -11,7 +11,7 @@ def get_manager(bot: commands.Bot) -> MusicManager:
 class Loop(commands.Cog):
     from discord import app_commands
 
-    @app_commands.command(name="loop", description="Zapne/vypne opakování aktuální skladby.")
+    @app_commands.command(name="smycka", description="Zapne/vypne opakování aktuální skladby.")
     async def loop_slash(self, interaction):
         user = interaction.user
         if not isinstance(user, discord.Member):
@@ -24,7 +24,7 @@ class Loop(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name="loop", aliases=["repeat"])
+    @commands.command(name="smycka", aliases=["repeat"])
     async def loop(self, ctx: commands.Context):
         mgr = get_manager(self.bot)
         gm = mgr.get_guild(ctx.guild)

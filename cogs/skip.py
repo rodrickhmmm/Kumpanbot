@@ -10,7 +10,7 @@ def get_manager(bot: commands.Bot) -> MusicManager:
 class Skip(commands.Cog):
     from discord import app_commands
 
-    @app_commands.command(name="skip", description="Přeskočí aktuální skladbu.")
+    @app_commands.command(name="preskocit", description="Přeskočí aktuální skladbu.")
     async def skip_slash(self, interaction):
         user = interaction.user
         if not isinstance(user, discord.Member):
@@ -25,7 +25,7 @@ class Skip(commands.Cog):
     def __init__(self, bot): 
         self.bot = bot
 
-    @commands.command(name="skip", aliases=["s"])
+    @commands.command(name="preskocit", aliases=["s"])
     async def skip(self, ctx: commands.Context):
         if not ctx.voice_client:
             return await ctx.reply("The bot is not in a voice channel.")

@@ -10,7 +10,7 @@ def get_manager(bot: commands.Bot) -> MusicManager:
 class NowPlaying(commands.Cog):
     from discord import app_commands
 
-    @app_commands.command(name="np", description="Zobrazí aktuálně hranou skladbu.")
+    @app_commands.command(name="nynihraje", description="Zobrazí aktuálně hranou skladbu.")
     async def nowplaying_slash(self, interaction):
         user = interaction.user
         if not isinstance(user, discord.Member):
@@ -32,7 +32,7 @@ class NowPlaying(commands.Cog):
     def __init__(self, bot): 
         self.bot = bot
 
-    @commands.command(name="np", aliases=["nowplaying"])
+    @commands.command(name="nynihraje", aliases=["nowplaying"])
     async def nowplaying(self, ctx: commands.Context):
         gm = get_manager(self.bot).get_guild(ctx.guild)
         if not gm.current:

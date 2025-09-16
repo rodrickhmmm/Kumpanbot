@@ -4,7 +4,7 @@ from discord.ext import commands
 class Resume(commands.Cog):
     from discord import app_commands
 
-    @app_commands.command(name="resume", description="Pokračuje v přehrávání hudby.")
+    @app_commands.command(name="pokracuj", description="Pokračuje v přehrávání hudby.")
     async def resume_slash(self, interaction):
         user = interaction.user
         if not isinstance(user, discord.Member):
@@ -23,7 +23,7 @@ class Resume(commands.Cog):
     def __init__(self, bot): 
         self.bot = bot
 
-    @commands.command(name="resume", aliases=["unpause", "continue"])
+    @commands.command(name="pokracuj", aliases=["unpause", "continue"])
     async def resume(self, ctx: commands.Context):
         vc = ctx.voice_client
         if not vc:

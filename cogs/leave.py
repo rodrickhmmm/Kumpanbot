@@ -4,7 +4,7 @@ from discord.ext import commands
 class Leave(commands.Cog):
     from discord import app_commands
 
-    @app_commands.command(name="leave", description="Bot opustí voice channel.")
+    @app_commands.command(name="odpoj", description="Bot opustí voice channel.")
     async def leave_slash(self, interaction):
         user = interaction.user
         if not isinstance(user, discord.Member):
@@ -20,7 +20,7 @@ class Leave(commands.Cog):
     def __init__(self, bot): 
         self.bot = bot
 
-    @commands.command(name="leave", aliases=["disconnect"])
+    @commands.command(name="odpoj", aliases=["disconnect"])
     async def leave(self, ctx: commands.Context):
         if not ctx.voice_client:
             return await ctx.reply("The bot is not in a voice channel.")
