@@ -1,6 +1,9 @@
 import discord
 from discord.ext import commands
 
+guild_id = 948315626131300402
+test_guild = discord.Object(id=guild_id)
+
 TOKEN = "" # Replace with your bot's token
 
 # Intents
@@ -53,15 +56,16 @@ async def on_command_error(ctx: commands.Context, error: commands.CommandError):
 @bot.command(name="help")
 async def help_cmd(ctx: commands.Context):
     embed = discord.Embed(title="Kumpánovské příkazy", color=discord.Color.purple())
-    embed.add_field(name="/play <název|link>", value="Najde top 5 skladeb nebo přehraje hudbu z YouTube odkazu", inline=False)
-    embed.add_field(name="/skip", value="Přeskoč aktuální hudbu", inline=True)
-    embed.add_field(name="/stop", value="Zastav aktuální hudbu a vymaže frontu", inline=True)
-    embed.add_field(name="/pause nebo /resume", value="Pozastavit nebo Pokračovat v hraní hudby", inline=False)
-    embed.add_field(name="/loop", value="Zapne/vypne loopování hudby", inline=False)
-    embed.add_field(name="/queue", value="Zobrazí frontu", inline=True)
-    embed.add_field(name="/np", value="Právě hraje", inline=True)
-    embed.add_field(name="/vol <0-200>", value="Hlasitost", inline=True)
-    embed.add_field(name="/join / /leave", value="Přivolej bota do voicu / Leavne voice", inline=True)
+    embed.add_field(name="můžeš buďto použít / a nebo k! k zadávání příkazů", inline=False)
+    embed.add_field(name="/hraj <název|link>", value="Najde top 5 skladeb nebo přehraje hudbu z YouTube odkazu", inline=False)
+    embed.add_field(name="/preskocit", value="Přeskoč aktuální hudbu", inline=True)
+    embed.add_field(name="/prestat", value="Zastav aktuální hudbu a vymaže frontu", inline=True)
+    embed.add_field(name="/pauzni", value="Pozastavit nebo Pokračovat v hraní hudby", inline=False)
+    embed.add_field(name="/smycka", value="Zapne/vypne loopování hudby", inline=False)
+    embed.add_field(name="/fronta", value="Zobrazí frontu", inline=True)
+    embed.add_field(name="/nynihraje", value="Právě hraje", inline=True)
+    embed.add_field(name="/hlasitost <0-200>", value="Hlasitost", inline=True)
+    embed.add_field(name="/pripoj / /odpoj", value="Přivolej bota do voicu / Leavne voice", inline=True)
     embed.add_field(name="/ping", value="Zkontroluj aktuální odezvu bota v milisekundách", inline=False)
     await ctx.reply(embed=embed)
 
@@ -71,20 +75,19 @@ async def help_cmd(ctx: commands.Context):
 @bot.tree.command(name="help", description="Show bot commands")
 async def help_slash(interaction: discord.Interaction):
     embed = discord.Embed(title="Kumpánovské příkazy", color=discord.Color.purple())
-    embed.add_field(name="/play <název|link>", value="Najde top 5 skladeb nebo přehraje hudbu z YouTube odkazu", inline=False)
-    embed.add_field(name="/skip", value="Přeskoč aktuální hudbu", inline=True)
-    embed.add_field(name="/stop", value="Zastav aktuální hudbu a vymaže frontu", inline=True)
-    embed.add_field(name="/pause nebo /resume", value="Pozastavit nebo Pokračovat v hraní hudby", inline=False)
-    embed.add_field(name="/loop", value="Zapne/vypne loopování hudby", inline=False)
-    embed.add_field(name="/queue", value="Zobrazí frontu", inline=True)
-    embed.add_field(name="/np", value="Právě hraje", inline=True)
-    embed.add_field(name="/vol <0-200>", value="Hlasitost", inline=True)
-    embed.add_field(name="/join / /leave", value="Přivolej bota do voicu / Leavne voice", inline=True)
+    embed.add_field(name="můžeš buďto použít / a nebo k! k zadávání příkazů", inline=False)
+    embed.add_field(name="/hraj <název|link>", value="Najde top 5 skladeb nebo přehraje hudbu z YouTube odkazu", inline=False)
+    embed.add_field(name="/preskocit", value="Přeskoč aktuální hudbu", inline=True)
+    embed.add_field(name="/prestat", value="Zastav aktuální hudbu a vymaže frontu", inline=True)
+    embed.add_field(name="/pauzni", value="Pozastavit nebo Pokračovat v hraní hudby", inline=False)
+    embed.add_field(name="/smycka", value="Zapne/vypne loopování hudby", inline=False)
+    embed.add_field(name="/fronta", value="Zobrazí frontu", inline=True)
+    embed.add_field(name="/nynihraje", value="Právě hraje", inline=True)
+    embed.add_field(name="/hlasitost <0-200>", value="Hlasitost", inline=True)
+    embed.add_field(name="/pripoj / /odpoj", value="Přivolej bota do voicu / Leavne voice", inline=True)
     embed.add_field(name="/ping", value="Zkontroluj aktuální odezvu bota v milisekundách", inline=False)
-    await interaction.response.send_message(embed=embed, ephemeral=True)
+    await ctx.reply(embed=embed)
 
-guild_id = 948315626131300402
-test_guild = discord.Object(id=guild_id)
 
 if __name__ == "__main__":
     if TOKEN.count(".") != 2 or any(c.isspace() for c in TOKEN):
