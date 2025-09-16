@@ -56,7 +56,7 @@ async def on_command_error(ctx: commands.Context, error: commands.CommandError):
 @bot.command(name="help")
 async def help_cmd(ctx: commands.Context):
     embed = discord.Embed(title="Kumpánovské příkazy", color=discord.Color.purple())
-    embed.add_field(name="můžeš buďto použít / a nebo k! k zadávání příkazů", inline=False)
+    embed.add_field(name="můžeš buďto použít / a nebo k! k zadávání příkazů", value=" ", inline=False)
     embed.add_field(name="/hraj <název|link>", value="Najde top 5 skladeb nebo přehraje hudbu z YouTube odkazu", inline=False)
     embed.add_field(name="/preskocit", value="Přeskoč aktuální hudbu", inline=True)
     embed.add_field(name="/prestat", value="Zastav aktuální hudbu a vymaže frontu", inline=True)
@@ -75,7 +75,7 @@ async def help_cmd(ctx: commands.Context):
 @bot.tree.command(name="help", description="Show bot commands")
 async def help_slash(interaction: discord.Interaction):
     embed = discord.Embed(title="Kumpánovské příkazy", color=discord.Color.purple())
-    embed.add_field(name="můžeš buďto použít / a nebo k! k zadávání příkazů", inline=False)
+    embed.add_field(name="můžeš buďto použít / a nebo k! k zadávání příkazů", value=" ", inline=False)
     embed.add_field(name="/hraj <název|link>", value="Najde top 5 skladeb nebo přehraje hudbu z YouTube odkazu", inline=False)
     embed.add_field(name="/preskocit", value="Přeskoč aktuální hudbu", inline=True)
     embed.add_field(name="/prestat", value="Zastav aktuální hudbu a vymaže frontu", inline=True)
