@@ -86,7 +86,7 @@ async def help_slash(interaction: discord.Interaction):
     embed.add_field(name="/hlasitost <0-200>", value="Hlasitost", inline=True)
     embed.add_field(name="/pripoj / /odpoj", value="Přivolej bota do voicu / Leavne voice", inline=True)
     embed.add_field(name="/ping", value="Zkontroluj aktuální odezvu bota v milisekundách", inline=False)
-    await ctx.reply(embed=embed)
+    await interaction.response.send_message(embed=embed, ephemeral=True)
 
 
 if __name__ == "__main__":
