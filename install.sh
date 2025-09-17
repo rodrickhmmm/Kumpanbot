@@ -4,8 +4,6 @@ sudo apt update
 sudo apt upgrade
 sudo apt install python3.10-venv ffmpeg git nano
 
-git clone https://github.com/rodrickhmmm/Kumpanbot
-cd Kumpanbot
 python -m venv venv
 source venv/bin/activate
 python -m pip install --upgrade discord.py
