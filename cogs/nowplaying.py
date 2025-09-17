@@ -14,20 +14,20 @@ class NowPlaying(commands.Cog):
     async def nowplaying_slash(self, interaction):
         user = interaction.user
         if not isinstance(user, discord.Member):
-            await interaction.response.send_message("This command can only be used in a server.", ephemeral=True)
+            await interaction.response.send_message("Tenhle příkaz můžeš poslat jen na Mým Kumpánům.", ephemeral=True)
             return
         gm = get_manager(self.bot).get_guild(interaction.guild)
         if not gm.current:
-            await interaction.response.send_message("No song is currently playing.", ephemeral=True)
+            await interaction.response.send_message("Teď nehraje žádná hudba.", ephemeral=True)
             return
         e = discord.Embed(
-            title="Now playing",
+            title="Teď hraje",
             description=f"[{gm.current.title}]({gm.current.web_url})",
-            color=discord.Color.light_embed()
+            color=0xa014e1
         )
         if gm.current.thumbnail:
             e.set_thumbnail(url=gm.current.thumbnail)
-        e.add_field(name="Requested by", value=gm.current.requested_by.mention)
+        e.add_field(name="Požadováno od", value=gm.current.requested_by.mention)
         await interaction.response.send_message(embed=e)
     def __init__(self, bot): 
         self.bot = bot
@@ -36,15 +36,15 @@ class NowPlaying(commands.Cog):
     async def nowplaying(self, ctx: commands.Context):
         gm = get_manager(self.bot).get_guild(ctx.guild)
         if not gm.current:
-            return await ctx.reply("No song is currently playing.")
+            return await ctx.reply("Teď nehraje žádná hudba.")
         e = discord.Embed(
-            title="Now playing",
+            title="Teď hraje",
             description=f"[{gm.current.title}]({gm.current.web_url})",
-            color=discord.Color.light_embed()
+            color=0xa014e1
         )
         if gm.current.thumbnail:
             e.set_thumbnail(url=gm.current.thumbnail)
-        e.add_field(name="Requested by", value=gm.current.requested_by.mention)
+        e.add_field(name="Požadováno od", value=gm.current.requested_by.mention)
         await ctx.reply(embed=e)
 
 async def setup(bot: commands.Bot):

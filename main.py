@@ -49,7 +49,7 @@ async def on_command_error(ctx: commands.Context, error: commands.CommandError):
     except Exception:
         await ctx.send(msg)
     
-@bot.command(name="help")
+@bot.command(name="pomoc")
 async def help_cmd(ctx: commands.Context):
     embed = discord.Embed(title="Kumpánovské příkazy", color=discord.Color.purple())
     embed.add_field(name="můžeš buďto použít / a nebo k! k zadávání příkazů", value=" ", inline=False)
@@ -68,7 +68,7 @@ async def help_cmd(ctx: commands.Context):
 
 
 # Slash command version of help
-@bot.tree.command(name="help", description="Show bot commands")
+@bot.tree.command(name="pomoc", description="Ukáže přikázy které řinčák používá")
 async def help_slash(interaction: discord.Interaction):
     embed = discord.Embed(title="Kumpánovské příkazy", color=discord.Color.purple())
     embed.add_field(name="můžeš buďto použít / a nebo k! k zadávání příkazů", value=" ", inline=False)

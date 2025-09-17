@@ -15,12 +15,12 @@ class Loop(commands.Cog):
     async def loop_slash(self, interaction):
         user = interaction.user
         if not isinstance(user, discord.Member):
-            await interaction.response.send_message("This command can only be used in a server.", ephemeral=True)
+            await interaction.response.send_message("Tenhle příkaz můžeš poslat jen na Mým Kumpánům.", ephemeral=True)
             return
         mgr = get_manager(self.bot)
         gm = mgr.get_guild(interaction.guild)
         gm.loop = not gm.loop
-        await interaction.response.send_message(f"🔁 Loop is now **{'enabled' if gm.loop else 'disabled'}**.")
+        await interaction.response.send_message(f"🔁 Smyčka je teď **{'zaplá' if gm.loop else 'vyplá'}**.")
     def __init__(self, bot):
         self.bot = bot
 
@@ -29,7 +29,7 @@ class Loop(commands.Cog):
         mgr = get_manager(self.bot)
         gm = mgr.get_guild(ctx.guild)
         gm.loop = not gm.loop
-        await ctx.reply(f"🔁 Loop is now **{'enabled' if gm.loop else 'disabled'}**.")
+        await ctx.reply(f"🔁 Smyčka je teď **{'zaplá' if gm.loop else 'vyplá'}**.")
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(Loop(bot))

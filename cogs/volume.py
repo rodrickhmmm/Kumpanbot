@@ -15,7 +15,7 @@ class Volume(commands.Cog):
     async def volume_slash(self, interaction, vol: int):
         user = interaction.user
         if not isinstance(user, discord.Member):
-            await interaction.response.send_message("This command can only be used in a server.", ephemeral=True)
+            await interaction.response.send_message("Tenhle příkaz můžeš poslat jen na Mým Kumpánům.", ephemeral=True)
             return
         if not 0 <= vol <= 200:
             await interaction.response.send_message("Volume must be between 0 and 200.", ephemeral=True)

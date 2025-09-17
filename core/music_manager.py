@@ -50,7 +50,7 @@ class MusicManager:
             raise TypeError("ctx_or_interaction must be commands.Context or discord.Interaction")
 
         if not author or not isinstance(author, discord.Member) or not author.voice or not author.voice.channel:
-            raise commands.CommandError("You need to join a voice channel first.")
+            raise commands.CommandError("Nejdříve musíš být v chcallu ty voříšku!!!!")
         channel = target_channel or author.voice.channel
         if voice_client:
             if voice_client.channel != channel:

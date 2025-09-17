@@ -14,7 +14,7 @@ class Skip(commands.Cog):
     async def skip_slash(self, interaction):
         user = interaction.user
         if not isinstance(user, discord.Member):
-            await interaction.response.send_message("This command can only be used in a server.", ephemeral=True)
+            await interaction.response.send_message("Tenhle příkaz můžeš poslat jen na Mým Kumpánům.", ephemeral=True)
             return
         guild = interaction.guild
         if not guild.voice_client:

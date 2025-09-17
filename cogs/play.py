@@ -26,12 +26,12 @@ def fmt_duration(seconds) -> str:
 class Play(commands.Cog):
     from discord import app_commands
 
-    @app_commands.command(name="hraj", description="Přehraje hudbu podle názvu nebo odkazu.")
+    @app_commands.command(name="hraj", description="Přehraje skladbu podle názvu nebo odkazu.")
     async def play_slash(self, interaction: discord.Interaction, query: str):
         user = interaction.user
         await interaction.response.defer()
         if not isinstance(user, discord.Member):
-            await interaction.followup.send("This command can only be used in a server.", ephemeral=True)
+            await interaction.followup.send("Tenhle příkaz můžeš poslat jen na Mým Kumpánům.", ephemeral=True)
             return
         mgr = get_manager(self.bot)
         # Direct link
@@ -39,7 +39,7 @@ class Play(commands.Cog):
             await mgr.ensure_voice(interaction)
             stream = await get_stream_url(query)
             if not stream:
-                await interaction.followup.send("Could not retrieve stream from this link.", ephemeral=True)
+                await interaction.followup.send("Nemůžu přehrát skladbu z tohoto odkazu.", ephemeral=True)
                 return
             results = await search_yt(query, limit=1)
             meta = results[0] if results else {"title": "Unknown", "thumbnail": None, "url": query}
@@ -52,19 +52,19 @@ class Play(commands.Cog):
                 thumbnail=meta.get("thumbnail")
             )
             await mgr.add_track(interaction, track)
-            await interaction.followup.send(f"🎵 Added: **{track.title}**")
+            await interaction.followup.send(f"🎵 Přidán: **{track.title}**")
             return
 
         # Search and add first result
         results = await search_yt(query, limit=1)
         if not results:
-            await interaction.followup.send("No results found.", ephemeral=True)
+            await interaction.followup.send("Nenalezeny žádné výsledky.", ephemeral=True)
             return
         chosen = results[0]
         await mgr.ensure_voice(interaction)
         stream = await get_stream_url(chosen["url"])
         if not stream:
-            await interaction.followup.send("Could not retrieve stream from this link.", ephemeral=True)
+            await interaction.followup.send("Nemůžu přehrát skladbu z tohoto odkazu.", ephemeral=True)
             return
         track = Track(
             title=chosen["title"],
