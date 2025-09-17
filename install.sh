@@ -9,8 +9,7 @@ source venv/bin/activate
 python3.11 -m pip install --upgrade discord.py
 python3.11 -m pip install yt-dlp ffmpeg ffprobe PyNaCl
 echo "All required packages have been installed."
-echo .
-echo .
+clear
 read -s -p "Enter your token: " TOKEN
 echo
 echo "TOKEN = \"$TOKEN\"" > bot_token.py
@@ -48,6 +47,8 @@ EOF
 sudo systemctl daemon-reload
 sudo systemctl enable $SERVICE_NAME.service       # Activates the service at boot
 sudo systemctl start $SERVICE_NAME.service        # Starts the service immediately
+
+clear
 
 echo "Systemd service has been enabled (will start at boot) and started as root."
 echo "To stop the service: sudo systemctl stop $SERVICE_NAME"
