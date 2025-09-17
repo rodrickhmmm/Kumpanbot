@@ -15,7 +15,6 @@ read -s -p "Zadej svůj Discord bot token: " TOKEN
 echo
 echo "TOKEN = \"$TOKEN\"" > token.py
 echo "Token byl uložen do token.py."
-nano token.py
 
 # --- AUTOSTART SETUP ---
 SERVICE_NAME="kumpanbot"
