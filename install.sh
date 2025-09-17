@@ -2,7 +2,7 @@
 
 sudo apt update
 sudo apt upgrade
-sudo apt install python3.10-venv ffmpeg git nano
+sudo apt install python3.10-venv ffmpeg git nano -y
 
 python -m venv venv
 source venv/bin/activate

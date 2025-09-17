@@ -4,6 +4,6 @@
 
 ```cd Kumpanbot```
 
-```sudo chmod+x install.sh```
+```sudo chmod +x install.sh```
 
 ```./install.sh```
