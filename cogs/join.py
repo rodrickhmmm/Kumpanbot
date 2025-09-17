@@ -4,9 +4,6 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 
-guild_id = 948315626131300402
-test_guild = discord.Object(id=guild_id)
-
 def get_manager(bot: commands.Bot) -> MusicManager:
     if not hasattr(bot, "music"):
         bot.music = MusicManager(bot)
