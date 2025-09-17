@@ -18,19 +18,19 @@ class Skip(commands.Cog):
             return
         guild = interaction.guild
         if not guild.voice_client:
-            await interaction.response.send_message("The bot is not in a voice channel.", ephemeral=True)
+            await interaction.response.send_message("Řinčák není v chcallu.", ephemeral=True)
             return
         await get_manager(self.bot).skip(interaction)
-        await interaction.response.send_message("⏭️ Skipped.")
+        await interaction.response.send_message("⏭️ Skladba přeskočena.")
     def __init__(self, bot): 
         self.bot = bot
 
     @commands.command(name="preskocit", aliases=["s"])
     async def skip(self, ctx: commands.Context):
         if not ctx.voice_client:
-            return await ctx.reply("The bot is not in a voice channel.")
+            return await ctx.reply("Řinčák není v chcallu.")
         await get_manager(self.bot).skip(ctx)
-        await ctx.reply("⏭️ Skipped.")
+        await ctx.reply("⏭️ Skladba přeskočena.")
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(Skip(bot))

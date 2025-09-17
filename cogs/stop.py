@@ -10,7 +10,7 @@ def get_manager(bot: commands.Bot) -> MusicManager:
 class Stop(commands.Cog):
     from discord import app_commands
 
-    @app_commands.command(name="prestat", description="Zastaví hudbu a opustí voice channel.")
+    @app_commands.command(name="prestat", description="Zastaví hudbu a opustí chcall.")
     async def stop_slash(self, interaction):
         user = interaction.user
         if not isinstance(user, discord.Member):
@@ -18,19 +18,19 @@ class Stop(commands.Cog):
             return
         guild = interaction.guild
         if not guild.voice_client:
-            await interaction.response.send_message("The bot is not in a voice channel.", ephemeral=True)
+            await interaction.response.send_message("Řinčák není v chcallu.", ephemeral=True)
             return
         await get_manager(self.bot).stop(interaction)
-        await interaction.response.send_message("⏹️ Stopped playing and left the channel.")
+        await interaction.response.send_message("⏹️ Hudba je zastavena a opustil jsem chcall.")
     def __init__(self, bot): 
         self.bot = bot
 
     @commands.command(name="prestat")
     async def stop(self, ctx: commands.Context):
         if not ctx.voice_client:
-            return await ctx.reply("The bot is not in a voice channel.")
+            return await ctx.reply("Řinčák není v chcallu..")
         await get_manager(self.bot).stop(ctx)
-        await ctx.reply("⏹️ Stopped playing and left the channel.")
+        await ctx.reply("⏹️ Hudba je zastavena a opustil jsem chcall.")
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(Stop(bot))

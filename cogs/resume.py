@@ -13,13 +13,13 @@ class Resume(commands.Cog):
         guild = interaction.guild
         vc = guild.voice_client if guild else None
         if not vc:
-            await interaction.response.send_message("The bot is not in a voice channel.", ephemeral=True)
+            await interaction.response.send_message("Řinčák není v chcallu.", ephemeral=True)
             return
         if not vc.is_paused():
-            await interaction.response.send_message("The music is not paused.", ephemeral=True)
+            await interaction.response.send_message("Skladba není pauznutá.", ephemeral=True)
             return
         vc.resume()
-        await interaction.response.send_message("▶️ Resumed playing.")
+        await interaction.response.send_message("▶️ Pokračuji v hraní skladby.")
     def __init__(self, bot): 
         self.bot = bot
 
@@ -27,11 +27,11 @@ class Resume(commands.Cog):
     async def resume(self, ctx: commands.Context):
         vc = ctx.voice_client
         if not vc:
-            return await ctx.reply("The bot is not in a voice channel.")
+            return await ctx.reply("Řinčák není v chcallu.")
         if not vc.is_paused():
-            return await ctx.reply("The music is not paused.")
+            return await ctx.reply("Skladba není pauznutá.")
         vc.resume()
-        await ctx.reply("▶️ Resumed playing.")
+        await ctx.reply("▶️ Pokračuji v hraní skladby.")
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(Resume(bot))
