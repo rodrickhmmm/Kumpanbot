@@ -72,7 +72,10 @@ Fix: Double-check your token in [Discord Developer Portal](https://discord.com/d
 ### 2. Reactions not working in o!play search results
 Cause: You reacted too quickly before the bot added its own reactions.  
 Fix: Wait until the bot finishes adding reactions before choosing.
+### 3. Bot does not output any sound
+Cause: FFmpeg is not installed or not added to your system PATH.  
+Fix: Make sure FFmpeg is properly installed and added to PATH.  
 
 ## Support
 
-Need help? please open an issue in this repository.
+Need help? please open an issue in this repository. Alternatively, you can also copy the error message from your terminal and ask [ChatGPT](https://chat.openai.com/) for assistance.
