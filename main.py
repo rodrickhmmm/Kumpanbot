@@ -1,9 +1,6 @@
 import discord
 from discord.ext import commands
 
-guild_id = 948315626131300402
-test_guild = discord.Object(id=guild_id)
-
 TOKEN = "" # Replace with your bot's token
 
 # Intents
@@ -24,8 +21,7 @@ class KumpanBot(commands.Bot):
         for name in COG_MODULES:
             await self.load_extension(f"cogs.{name}")
         # Sync slash commands instantly to your test guild
-        guild = discord.Object(id=948315626131300402)
-        await self.tree.sync(guild=guild)
+        await self.tree.sync()
 
 bot = KumpanBot(
     command_prefix=commands.when_mentioned_or("k!", "K!"),
