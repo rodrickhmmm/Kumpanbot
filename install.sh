@@ -2,15 +2,20 @@
 
 sudo apt update
 sudo apt upgrade
-sudo apt install python3.10-venv ffmpeg git nano -y
+sudo apt install python ffmpeg nano -y
 
 python -m venv venv
 source venv/bin/activate
 python -m pip install --upgrade discord.py
-python -m pip install yt-dlp ffmpeg ffprobe
-
-read -p "Enter your Discord bot token in main.py and then save the file. Press Enter to continue..."
-nano main.py
+python -m pip install yt-dlp ffmpeg ffprobe PyNaCl
+echo "All required packages have been installed."
+echo .
+echo .
+read -s -p "Zadej svůj Discord bot token: " TOKEN
+echo
+echo "TOKEN = \"$TOKEN\"" > token.py
+echo "Token byl uložen do token.py."
+nano token.py
 
 # --- AUTOSTART SETUP ---
 SERVICE_NAME="kumpanbot"
