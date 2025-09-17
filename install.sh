@@ -2,12 +2,12 @@
 
 sudo apt update
 sudo apt upgrade
-sudo apt install python ffmpeg nano -y
+sudo apt install python3.11 ffmpeg nano -y
 
-python -m venv venv
+python3.11 -m venv venv
 source venv/bin/activate
-python -m pip install --upgrade discord.py
-python -m pip install yt-dlp ffmpeg ffprobe PyNaCl
+python3.11 -m pip install --upgrade discord.py
+python3.11 -m pip install yt-dlp ffmpeg ffprobe PyNaCl
 echo "All required packages have been installed."
 echo .
 echo .
