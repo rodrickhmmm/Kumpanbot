@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from token import TOKEN
+from bot_token import TOKEN
 
 # Intents
 intents = discord.Intents.default()

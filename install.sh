@@ -11,10 +11,10 @@ python3.11 -m pip install yt-dlp ffmpeg ffprobe PyNaCl
 echo "All required packages have been installed."
 echo .
 echo .
-read -s -p "Zadej svůj Discord bot token: " TOKEN
+read -s -p "Enter your token: " TOKEN
 echo
-echo "TOKEN = \"$TOKEN\"" > token.py
-echo "Token byl uložen do token.py."
+echo "TOKEN = \"$TOKEN\"" > bot_token.py
+echo "Token saved to bot_token.py."
 
 # --- AUTOSTART SETUP ---
 SERVICE_NAME="kumpanbot"
