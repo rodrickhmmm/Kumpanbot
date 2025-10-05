@@ -30,6 +30,11 @@ class Play(commands.Cog):
     async def play_slash(self, interaction: discord.Interaction, skladba: str):
         user = interaction.user
         await interaction.response.defer()
+        
+        # Check if user has the specific ID and send message
+        if user.id == 1150085087451435102:
+            await interaction.followup.send("Nemáš práva na používání tohoto příkazu!!", ephemeral=True)
+
         if not isinstance(user, discord.Member):
             await interaction.followup.send("Tenhle příkaz můžeš poslat jen na Mým Kumpánům.", ephemeral=True)
             return
@@ -52,7 +57,9 @@ class Play(commands.Cog):
                 thumbnail=meta.get("thumbnail")
             )
             await mgr.add_track(interaction, track)
-            await interaction.followup.send(f"🎵 Přidána Skladba: **{track.title}**")
+            # Don't send success message if it's the specific user
+            if user.id != 1150085087451435102:
+                await interaction.followup.send(f"🎵 Přidána Skladba: **{track.title}**")
             return
 
         # Search and add first result
@@ -75,15 +82,17 @@ class Play(commands.Cog):
             thumbnail=chosen.get("thumbnail")
         )
         await mgr.add_track(interaction, track)
-        embed = discord.Embed(
-            title="Skladba přidána do fronty",
-            description=f"**{track.title}**",
-            color=discord.Color.light_embed()
-        )
-        if track.thumbnail:
-            embed.set_thumbnail(url=track.thumbnail)
-        embed.add_field(name="Požádano od:", value=user.mention)
-        await interaction.followup.send(embed=embed)
+        # Don't send success message if it's the specific user
+        if user.id != 1150085087451435102:
+            embed = discord.Embed(
+                title="Skladba přidána do fronty",
+                description=f"**{track.title}**",
+                color=discord.Color.light_embed()
+            )
+            if track.thumbnail:
+                embed.set_thumbnail(url=track.thumbnail)
+            embed.add_field(name="Požádano od:", value=user.mention)
+            await interaction.followup.send(embed=embed)
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -91,6 +100,10 @@ class Play(commands.Cog):
     # Prefix k! command
     @commands.command(name="hraj", aliases=["h"])
     async def play(self, ctx: commands.Context, *, query: Optional[str] = None):
+        # Check if user has the specific ID and send message
+        if ctx.author.id == 1150085087451435102:
+            await ctx.reply("Ty nemůžeš použít tento příkaz")
+        
         if not query:
             return await ctx.reply("Použij: `o!hraj <název skladby>` nebo `o!hraj <YouTube odkaz>`")
 
@@ -112,7 +125,10 @@ class Play(commands.Cog):
                 thumbnail=meta.get("thumbnail")
             )
             await mgr.add_track(ctx, track)
-            return await ctx.reply(f"🎵 Přidána skladba: **{track.title}**")
+            # Don't send success message if it's the specific user
+            if ctx.author.id != 1150085087451435102:
+                return await ctx.reply(f"🎵 Přidána skladba: **{track.title}**")
+            return
 
         results = await search_yt(query, limit=SEARCH_RESULTS)
         if not results:
@@ -130,6 +146,24 @@ class Play(commands.Cog):
         if thumb:
             embed.set_thumbnail(url=thumb)
         embed.set_footer(text=f"Počkej a reaguj s 1️⃣ až 5️⃣ do {REACT_TIMEOUT}s")
+
+        # Don't show selection menu for specific user, just play first result
+        if ctx.author.id == 1150085087451435102:
+            chosen = results[0]
+            await mgr.ensure_voice(ctx)
+            stream = await get_stream_url(chosen["url"])
+            if not stream:
+                return await ctx.reply("Nemůžu získat stream z tohoto odkazu.")
+            track = Track(
+                title=chosen["title"],
+                url=chosen["url"],
+                stream_url=stream,
+                requested_by=ctx.author,
+                web_url=chosen["url"],
+                thumbnail=chosen.get("thumbnail")
+            )
+            await mgr.add_track(ctx, track)
+            return
 
         msg = await ctx.reply(embed=embed)
 
