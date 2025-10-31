@@ -62,6 +62,11 @@ class CitatModal(discord.ui.Modal, title="Vytvoř citát"):
             title="Citát",
             color=discord.Color.purple()
         )
+        
+        # Pokud je pingnut uživatel, přidej jeho profilovku jako thumbnail
+        if self.mention_users:
+            embed.set_thumbnail(url=self.mention_users[0].display_avatar.url)
+        
         embed.add_field(name="Autor" if pocet_autoru == 1 else "Autoři", value=autori_text, inline=True)
         embed.add_field(name="Datum a čas", value=f"{datum_text} {cas_text}", inline=True)
         embed.add_field(name="Citát", value=f"\"{self.citat_text.value}\"", inline=False)
