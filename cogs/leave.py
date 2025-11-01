@@ -1,5 +1,11 @@
 import discord
 from discord.ext import commands
+from core.music_manager import MusicManager
+
+def get_manager(bot: commands.Bot) -> MusicManager:
+    if not hasattr(bot, "music"):
+        bot.music = MusicManager(bot)
+    return bot.music
 
 class Leave(commands.Cog):
     from discord import app_commands
@@ -14,8 +20,27 @@ class Leave(commands.Cog):
         if not guild or not guild.voice_client:
             await interaction.response.send_message("Nejsem ve chcallu ty kaštane.", ephemeral=True)
             return
-        await guild.voice_client.disconnect(force=True)
-        await interaction.response.send_message("👋 Odpojil jsem se z chcallu.")
+        
+        # Defer the response first
+        if not interaction.response.is_done():
+            await interaction.response.defer()
+        
+        # Clear queue and stop playback properly
+        mgr = get_manager(self.bot)
+        gm = mgr.get_guild(guild)
+        gm.queue.clear()
+        gm.skip_current = True  # Don't re-queue current track
+        
+        if guild.voice_client and guild.voice_client.is_playing():
+            guild.voice_client.stop()
+        
+        await guild.voice_client.disconnect(force=False)
+        
+        # Use followup since we deferred
+        try:
+            await interaction.followup.send("👋 Odpojil jsem se z chcallu.")
+        except Exception:
+            pass  # Ignore if followup fails
 
     def __init__(self, bot): 
         self.bot = bot
@@ -24,7 +49,17 @@ class Leave(commands.Cog):
     async def leave(self, ctx: commands.Context):
         if not ctx.voice_client:
             return await ctx.reply("Nejsem ve chcallu ty kaštane.")
-        await ctx.voice_client.disconnect(force=True)
+        
+        # Clear queue and stop playback properly
+        mgr = get_manager(self.bot)
+        gm = mgr.get_guild(ctx.guild)
+        gm.queue.clear()
+        gm.skip_current = True  # Don't re-queue current track
+        
+        if ctx.voice_client.is_playing():
+            ctx.voice_client.stop()
+        
+        await ctx.voice_client.disconnect(force=False)
         await ctx.reply("👋 Odpojil jsem se z chcallu.")
 
 async def setup(bot: commands.Bot):

@@ -20,8 +20,18 @@ class Skip(commands.Cog):
         if not guild.voice_client:
             await interaction.response.send_message("Řinčák není v chcallu.", ephemeral=True)
             return
+        
+        # Defer the response first to avoid timeout issues
+        if not interaction.response.is_done():
+            await interaction.response.defer()
+        
         await get_manager(self.bot).skip(interaction)
-        await interaction.response.send_message("⏭️ Skladba přeskočena.")
+        
+        # Use followup since we deferred
+        try:
+            await interaction.followup.send("⏭️ Skladba přeskočena.")
+        except Exception:
+            pass  # Ignore if followup fails
     def __init__(self, bot): 
         self.bot = bot
 

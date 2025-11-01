@@ -20,8 +20,21 @@ class Stop(commands.Cog):
         if not guild.voice_client:
             await interaction.response.send_message("Řinčák není v chcallu.", ephemeral=True)
             return
-        await get_manager(self.bot).stop(interaction)
-        await interaction.response.send_message("⏹️ Hudba je zastavena a opustil jsem chcall.")
+        
+        # Defer the response first
+        if not interaction.response.is_done():
+            await interaction.response.defer()
+        
+        mgr = get_manager(self.bot)
+        gm = mgr.get_guild(guild)
+        gm.skip_current = True  # Don't re-queue current track when stopping
+        await mgr.stop(interaction)
+        
+        # Use followup since we deferred
+        try:
+            await interaction.followup.send("⏹️ Hudba je zastavena a opustil jsem chcall.")
+        except Exception:
+            pass  # Ignore if followup fails
     def __init__(self, bot): 
         self.bot = bot
 
@@ -29,7 +42,10 @@ class Stop(commands.Cog):
     async def stop(self, ctx: commands.Context):
         if not ctx.voice_client:
             return await ctx.reply("Řinčák není v chcallu..")
-        await get_manager(self.bot).stop(ctx)
+        mgr = get_manager(self.bot)
+        gm = mgr.get_guild(ctx.guild)
+        gm.skip_current = True  # Don't re-queue current track when stopping
+        await mgr.stop(ctx)
         await ctx.reply("⏹️ Hudba je zastavena a opustil jsem chcall.")
 
 async def setup(bot: commands.Bot):

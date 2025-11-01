@@ -23,7 +23,8 @@ class GuildMusic:
         self.current: Optional[Track] = None
         self.volume = 1.0
         self.player_task: Optional[asyncio.Task] = None
-        self.loop = False 
+        self.loop = False
+        self.skip_current = False  # Flag for skipping without re-queuing 
 
 class MusicManager:
     def __init__(self, bot: commands.Bot):
@@ -120,16 +121,22 @@ class MusicManager:
         else:
             raise TypeError("ctx_or_interaction must be commands.Context or discord.Interaction")
         gm = self.get_guild(guild)
+        gm.skip_current = True  # Mark that we're skipping (don't re-queue if loop is on)
         if vc and vc.is_playing():
             vc.stop()
-        # If nothing is queued and nothing is playing, clean up and disconnect
-        if (not gm.queue) and (not vc or not vc.is_playing()):
-            await self._cleanup(ctx_or_interaction)
+        # Don't call _cleanup here - let the player loop handle it
 
-    async def stop(self, ctx: commands.Context):
-        gm = self.get_guild(ctx.guild)
+    async def stop(self, ctx_or_interaction):
+        if isinstance(ctx_or_interaction, commands.Context):
+            guild = ctx_or_interaction.guild
+        elif isinstance(ctx_or_interaction, discord.Interaction):
+            guild = ctx_or_interaction.guild
+        else:
+            raise TypeError("ctx_or_interaction must be commands.Context or discord.Interaction")
+        gm = self.get_guild(guild)
         gm.queue.clear()
-        await self._cleanup(ctx)
+        gm.skip_current = True  # Don't re-queue when stopping
+        await self._cleanup(ctx_or_interaction)
 
     async def _player_loop(self, ctx_or_interaction):
         # Support both commands.Context and discord.Interaction
@@ -172,6 +179,11 @@ class MusicManager:
                         await asyncio.sleep(0.5)
 
                     play_dur = asyncio.get_event_loop().time() - start_ts
+                    
+                    # Don't retry if we're skipping - just move to next track
+                    if gm.skip_current:
+                        break
+                    
                     if play_dur < 10 and attempts == 0:
                         try:
                             from utils.ytdl import get_stream_url
@@ -186,8 +198,13 @@ class MusicManager:
                             pass
                     break  
 
-                if gm.loop:
+                # Re-queue if loop is enabled AND we're not skipping
+                if gm.loop and not gm.skip_current:
                     gm.queue.appendleft(track)
+                
+                # Reset skip flag AFTER re-queue check
+                # This way if we skipped, the flag prevents re-queue, then gets reset for next track
+                gm.skip_current = False
 
                 gm.current = None
 
