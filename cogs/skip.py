@@ -29,7 +29,12 @@ class Skip(commands.Cog):
         
         # Use followup since we deferred
         try:
-            await interaction.followup.send("⏭️ Skladba přeskočena.")
+            embed = discord.Embed(
+                title="⏭️ Skladba přeskočena",
+                color=discord.Color.purple()
+            )
+            embed.set_footer(text=f"Požádal {user.display_name}", icon_url=user.display_avatar.url)
+            await interaction.followup.send(embed=embed)
         except Exception:
             pass  # Ignore if followup fails
     def __init__(self, bot): 

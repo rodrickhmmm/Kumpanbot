@@ -34,7 +34,13 @@ class ClearQueue(commands.Cog):
         # Use followup since we deferred
         try:
             if queue_size > 0:
-                await interaction.followup.send(f"🗑️ Fronta vyčištěna! Odstraněno **{queue_size}** skladeb.")
+                embed = discord.Embed(
+                    title="🗑️ Fronta vyčištěna",
+                    description=f"Odstraněno **{queue_size}** skladeb z fronty.",
+                    color=discord.Color.purple()
+                )
+                embed.set_footer(text=f"Požádal {user.display_name}", icon_url=user.display_avatar.url)
+                await interaction.followup.send(embed=embed)
             else:
                 await interaction.followup.send("Fronta je už prázdná.", ephemeral=True)
         except Exception:

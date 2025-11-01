@@ -38,7 +38,12 @@ class Leave(commands.Cog):
         
         # Use followup since we deferred
         try:
-            await interaction.followup.send("👋 Odpojil jsem se z chcallu.")
+            embed = discord.Embed(
+                title="👋 Odpojeno",
+                description="Vyčistil jsem frontu a odpojil se z hlasového kanálu.",
+                color=discord.Color.purple()
+            )
+            await interaction.followup.send(embed=embed)
         except Exception:
             pass  # Ignore if followup fails
 

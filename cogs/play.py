@@ -52,7 +52,12 @@ class Play(commands.Cog):
                     return
                 
                 # Send initial message
-                await interaction.followup.send(f"📝 Přidávám **{len(playlist_tracks)}** skladeb z playlistu...")
+                embed = discord.Embed(
+                    title="📝 Přidávám playlist",
+                    description=f"Načítám **{len(playlist_tracks)}** skladeb...",
+                    color=discord.Color.purple()
+                )
+                await interaction.followup.send(embed=embed)
                 
                 # Add all tracks to queue
                 added_count = 0
@@ -77,7 +82,13 @@ class Play(commands.Cog):
                         continue
                 
                 if added_count > 0 and user.id != 1150085087451435102:
-                    await interaction.channel.send(f"✅ Přidáno **{added_count}** skladeb z playlistu!")
+                    embed = discord.Embed(
+                        title="✅ Playlist přidán",
+                        description=f"Přidáno **{added_count}** skladeb do fronty",
+                        color=discord.Color.purple()
+                    )
+                    embed.set_footer(text=f"Požádal {user.display_name}", icon_url=user.display_avatar.url)
+                    await interaction.channel.send(embed=embed)
                 return
             
             # Single track
@@ -99,8 +110,18 @@ class Play(commands.Cog):
             # Don't send success message if it's the specific user
             if user.id != 1150085087451435102:
                 is_sc = is_soundcloud_url(skladba)
-                source_emoji = "🎵" if is_sc else "🎵"
-                await interaction.followup.send(f"{source_emoji} Přidána Skladba: **{track.title}**")
+                source_name = "SoundCloud" if is_sc else "YouTube"
+                embed = discord.Embed(
+                    title="🎵 Přidána skladba",
+                    description=f"**{track.title}**",
+                    color=discord.Color.purple(),
+                    url=track.web_url
+                )
+                if track.thumbnail:
+                    embed.set_thumbnail(url=track.thumbnail)
+                embed.add_field(name="Zdroj", value=source_name, inline=True)
+                embed.add_field(name="Požádal", value=user.mention, inline=True)
+                await interaction.followup.send(embed=embed)
             return
 
         # Search - try SoundCloud if it looks like it might be from there, otherwise YouTube
@@ -128,7 +149,7 @@ class Play(commands.Cog):
             embed = discord.Embed(
                 title="Skladba přidána do fronty",
                 description=f"**{track.title}**",
-                color=discord.Color.light_embed()
+                color=discord.Color.purple()
             )
             if track.thumbnail:
                 embed.set_thumbnail(url=track.thumbnail)

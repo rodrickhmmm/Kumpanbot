@@ -32,7 +32,13 @@ class Stop(commands.Cog):
         
         # Use followup since we deferred
         try:
-            await interaction.followup.send("⏹️ Hudba je zastavena a opustil jsem chcall.")
+            embed = discord.Embed(
+                title="⏹️ Hudba zastavena",
+                description="Vyčistil jsem frontu a opustil hlasový kanál.",
+                color=discord.Color.purple()
+            )
+            embed.set_footer(text=f"Požádal {user.display_name}", icon_url=user.display_avatar.url)
+            await interaction.followup.send(embed=embed)
         except Exception:
             pass  # Ignore if followup fails
     def __init__(self, bot): 
