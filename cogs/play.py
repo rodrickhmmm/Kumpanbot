@@ -3,7 +3,7 @@ import contextlib
 import discord
 from discord.ext import commands
 from typing import Optional
-from utils.ytdl import search_yt, search_soundcloud, get_stream_url, get_track_info, is_soundcloud_url
+from utils.ytdl import search_yt, search_soundcloud, get_stream_url, get_track_info, is_soundcloud_url, is_playlist_url, get_playlist_tracks
 from core.music_manager import MusicManager, Track
 from core.constants import NUMBER_EMOJIS, SEARCH_RESULTS, REACT_TIMEOUT
 
@@ -44,6 +44,43 @@ class Play(commands.Cog):
         if skladba.startswith(("http://", "https://")):
             await mgr.ensure_voice(interaction)
             
+            # Check if it's a playlist
+            if is_playlist_url(skladba):
+                playlist_tracks = await get_playlist_tracks(skladba)
+                if not playlist_tracks:
+                    await interaction.followup.send("Nemůžu načíst playlist.", ephemeral=True)
+                    return
+                
+                # Send initial message
+                await interaction.followup.send(f"📝 Přidávám **{len(playlist_tracks)}** skladeb z playlistu...")
+                
+                # Add all tracks to queue
+                added_count = 0
+                for track_data in playlist_tracks:
+                    try:
+                        # Get stream URL for each track
+                        track_info = await get_track_info(track_data["url"])
+                        if not track_info or not track_info.get("stream_url"):
+                            continue
+                        
+                        track = Track(
+                            title=track_info.get("title") or track_data.get("title") or "Neznámá skladba",
+                            url=track_data["url"],
+                            stream_url=track_info["stream_url"],
+                            requested_by=user,
+                            web_url=track_info.get("url") or track_data["url"],
+                            thumbnail=track_info.get("thumbnail") or track_data.get("thumbnail")
+                        )
+                        await mgr.add_track(interaction, track, start_if_idle=(added_count == 0))
+                        added_count += 1
+                    except Exception:
+                        continue
+                
+                if added_count > 0 and user.id != 1150085087451435102:
+                    await interaction.channel.send(f"✅ Přidáno **{added_count}** skladeb z playlistu!")
+                return
+            
+            # Single track
             # Get full track info (title, thumbnail, stream URL in one call)
             track_info = await get_track_info(skladba)
             if not track_info or not track_info.get("stream_url"):

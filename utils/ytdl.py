@@ -111,6 +111,55 @@ def is_soundcloud_url(url: str) -> bool:
     """Check if URL is from SoundCloud"""
     return "soundcloud.com" in url.lower()
 
+def is_playlist_url(url: str) -> bool:
+    """Check if URL is a playlist"""
+    url_lower = url.lower()
+    return ("list=" in url_lower or 
+            "/playlist" in url_lower or 
+            "/sets/" in url_lower)  # SoundCloud playlists
+
+async def get_playlist_tracks(url: str) -> List[Dict]:
+    """Extract all tracks from a playlist URL"""
+    # Use extract_flat to get playlist items without downloading full info
+    opts = dict(YTDL_BASE_OPTS)
+    opts["extract_flat"] = True  # Get basic info quickly
+    opts["noplaylist"] = False  # Allow playlists!
+    
+    def _runner():
+        with yt_dlp.YoutubeDL(opts) as ydl:
+            return ydl.extract_info(url, download=False)
+    
+    try:
+        data = await asyncio.to_thread(_runner)
+    except Exception:
+        return []
+    
+    if not data:
+        return []
+    
+    # If it's a playlist, get entries
+    entries = data.get("entries", [])
+    if not entries and data.get("_type") != "playlist":
+        # Not a playlist, just a single video
+        return []
+    
+    tracks = []
+    for entry in entries:
+        if not entry:
+            continue
+        # Build track info from flat extraction
+        track = {
+            "title": entry.get("title") or "Unknown",
+            "url": entry.get("url") or entry.get("webpage_url") or f"https://www.youtube.com/watch?v={entry.get('id')}",
+            "duration": entry.get("duration"),
+            "uploader": entry.get("uploader") or entry.get("channel"),
+            "thumbnail": entry.get("thumbnail") or entry.get("thumbnails", [{}])[0].get("url"),
+            "id": entry.get("id"),
+        }
+        tracks.append(track)
+    
+    return tracks
+
 async def get_track_info(link_or_id: str) -> Optional[Dict]:
     """Get full track info including title, thumbnail, stream URL, etc."""
     info = await extract_info(link_or_id, download=False)
