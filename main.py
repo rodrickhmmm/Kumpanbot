@@ -12,7 +12,7 @@ intents.reactions = True
 COG_MODULES = [
     "play", "skip", "stop", "pause", "resume",
     "queue", "nowplaying", "volume", "join", "leave",
-    "loop", "ping", "citat",
+    "loop", "ping", "citat"
 ]
 
 class KumpanBot(commands.Bot):
@@ -53,7 +53,7 @@ async def help_cmd(ctx: commands.Context):
     embed = discord.Embed(title="Kumpánovské příkazy", color=discord.Color.purple())
     embed.set_thumbnail(url="https://images.uncyclomedia.co/necyklopedie/cs/thumb/f/f8/Frantisekreditel.jpg/250px-Frantisekreditel.jpg")
     embed.add_field(name="můžeš buďto použít / a nebo k! k zadávání příkazů", value=" ", inline=False)
-    embed.add_field(name="/hraj <název|link>", value="Najde top 5 skladeb nebo přehraje hudbu z YouTube odkazu", inline=False)
+    embed.add_field(name="/hraj <název|link>", value="Najde top 5 skladeb nebo přehraje hudbu z YouTube/SoundCloud odkazu", inline=False)
     embed.add_field(name="/preskocit", value="Přeskoč aktuální hudbu", inline=False)
     embed.add_field(name="/prestat", value="Zastav aktuální hudbu a vymaže frontu", inline=False)
     embed.add_field(name="/pauzni", value="Pozastavit nebo Pokračovat v hraní hudby", inline=False)
@@ -74,7 +74,7 @@ async def help_slash(interaction: discord.Interaction):
     embed = discord.Embed(title="Kumpánovské příkazy", color=discord.Color.purple())
     embed.set_thumbnail(url="https://images.uncyclomedia.co/necyklopedie/cs/thumb/f/f8/Frantisekreditel.jpg/250px-Frantisekreditel.jpg")
     embed.add_field(name="můžeš buďto použít / a nebo k! k zadávání příkazů", value=" ", inline=False)
-    embed.add_field(name="/hraj <název|link>", value="Najde top 5 skladeb nebo přehraje hudbu z YouTube odkazu", inline=False)
+    embed.add_field(name="/hraj <název|link>", value="Najde top 5 skladeb nebo přehraje hudbu z YouTube/SoundCloud odkazu", inline=False)
     embed.add_field(name="/preskocit", value="Přeskoč aktuální hudbu", inline=False)
     embed.add_field(name="/prestat", value="Zastav aktuální hudbu a vymaže frontu", inline=False)
     embed.add_field(name="/pauzni", value="Pozastavit nebo Pokračovat v hraní hudby", inline=False)

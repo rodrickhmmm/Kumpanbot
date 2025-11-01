@@ -85,6 +85,64 @@ async def search_yt(query: str, limit: int = 5) -> List[Dict]:
         })
     return results
 
+async def search_soundcloud(query: str, limit: int = 5) -> List[Dict]:
+    """Search SoundCloud for tracks"""
+    q = f"scsearch{limit}:{query}"
+    def _runner():
+        with yt_dlp.YoutubeDL(YTDL_SEARCH_OPTS) as ydl:
+            return ydl.extract_info(q, download=False)
+    data = await asyncio.to_thread(_runner)
+    entries = data.get("entries", []) if data else []
+    results = []
+    for e in entries:
+        if not e:
+            continue
+        results.append({
+            "title": e.get("title"),
+            "url": e.get("webpage_url") or e.get("url"),
+            "duration": e.get("duration"),
+            "uploader": e.get("uploader"),
+            "id": e.get("id"),
+            "thumbnail": e.get("thumbnail"),
+        })
+    return results
+
+def is_soundcloud_url(url: str) -> bool:
+    """Check if URL is from SoundCloud"""
+    return "soundcloud.com" in url.lower()
+
+async def get_track_info(link_or_id: str) -> Optional[Dict]:
+    """Get full track info including title, thumbnail, stream URL, etc."""
+    info = await extract_info(link_or_id, download=False)
+    if not info:
+        return None
+    if "entries" in info:
+        info = next((e for e in info["entries"] if e), None)
+        if not info:
+            return None
+    
+    # Get best audio format
+    fmts = info.get("formats") or []
+    audio_formats = [f for f in fmts if f.get("acodec") not in (None, "none") and f.get("url")]
+    stream_url = None
+    if audio_formats:
+        def keyfmt(f):
+            return (f.get("abr") or 0, f.get("asr") or 0, f.get("tbr") or 0)
+        best = max(audio_formats, key=keyfmt)
+        stream_url = best.get("url")
+    else:
+        stream_url = info.get("url")
+    
+    return {
+        "title": info.get("title"),
+        "url": info.get("webpage_url") or link_or_id,
+        "stream_url": stream_url,
+        "duration": info.get("duration"),
+        "uploader": info.get("uploader"),
+        "thumbnail": info.get("thumbnail"),
+        "id": info.get("id"),
+    }
+
 async def get_stream_url(link_or_id: str) -> Optional[str]:
     info = await extract_info(link_or_id, download=False)
     if not info:

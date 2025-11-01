@@ -3,7 +3,7 @@ import contextlib
 import discord
 from discord.ext import commands
 from typing import Optional
-from utils.ytdl import search_yt, get_stream_url
+from utils.ytdl import search_yt, search_soundcloud, get_stream_url, get_track_info, is_soundcloud_url
 from core.music_manager import MusicManager, Track
 from core.constants import NUMBER_EMOJIS, SEARCH_RESULTS, REACT_TIMEOUT
 
@@ -26,7 +26,7 @@ def fmt_duration(seconds) -> str:
 class Play(commands.Cog):
     from discord import app_commands
 
-    @app_commands.command(name="hraj", description="Přehraje skladbu podle názvu nebo odkazu.")
+    @app_commands.command(name="hraj", description="Přehraje skladbu podle názvu nebo odkazu (YouTube, SoundCloud).")
     async def play_slash(self, interaction: discord.Interaction, skladba: str):
         user = interaction.user
         await interaction.response.defer()
@@ -39,30 +39,34 @@ class Play(commands.Cog):
             await interaction.followup.send("Tenhle příkaz můžeš poslat jen na Mým Kumpánům.", ephemeral=True)
             return
         mgr = get_manager(self.bot)
-        # Direct link
+        
+        # Direct link (YouTube or SoundCloud)
         if skladba.startswith(("http://", "https://")):
             await mgr.ensure_voice(interaction)
-            stream = await get_stream_url(skladba)
-            if not stream:
+            
+            # Get full track info (title, thumbnail, stream URL in one call)
+            track_info = await get_track_info(skladba)
+            if not track_info or not track_info.get("stream_url"):
                 await interaction.followup.send("Nemůžu přehrát skladbu z tohoto odkazu.", ephemeral=True)
                 return
-            results = await search_yt(skladba, limit=1)
-            meta = results[0] if results else {"title": "Neznámá skladba", "thumbnail": None, "url": skladba}
+            
             track = Track(
-                title=meta.get("title") or "Název skladby nebyl nalezen",
+                title=track_info.get("title") or "Neznámá skladba",
                 url=skladba,
-                stream_url=stream,
+                stream_url=track_info["stream_url"],
                 requested_by=user,
-                web_url=meta.get("url") or skladba,
-                thumbnail=meta.get("thumbnail")
+                web_url=track_info.get("url") or skladba,
+                thumbnail=track_info.get("thumbnail")
             )
             await mgr.add_track(interaction, track)
             # Don't send success message if it's the specific user
             if user.id != 1150085087451435102:
-                await interaction.followup.send(f"🎵 Přidána Skladba: **{track.title}**")
+                is_sc = is_soundcloud_url(skladba)
+                source_emoji = "🎵" if is_sc else "🎵"
+                await interaction.followup.send(f"{source_emoji} Přidána Skladba: **{track.title}**")
             return
 
-        # Search and add first result
+        # Search - try SoundCloud if it looks like it might be from there, otherwise YouTube
         results = await search_yt(skladba, limit=1)
         if not results:
             await interaction.followup.send("Nenalezeny žádné výsledky.", ephemeral=True)
@@ -105,31 +109,36 @@ class Play(commands.Cog):
             await ctx.reply("Ty nemůžeš použít tento příkaz")
         
         if not query:
-            return await ctx.reply("Použij: `o!hraj <název skladby>` nebo `o!hraj <YouTube odkaz>`")
+            return await ctx.reply("Použij: `k!hraj <název skladby>` nebo `k!hraj <YouTube/SoundCloud odkaz>`")
 
         mgr = get_manager(self.bot)
 
+        # Direct link (YouTube or SoundCloud)
         if query.startswith(("http://", "https://")):
             await mgr.ensure_voice(ctx)
-            stream = await get_stream_url(query)
-            if not stream:
+            
+            # Get full track info (title, thumbnail, stream URL in one call)
+            track_info = await get_track_info(query)
+            if not track_info or not track_info.get("stream_url"):
                 return await ctx.reply("Nemůžu získat stream z tohoto odkazu.")
-            results = await search_yt(query, limit=1)
-            meta = results[0] if results else {"title": "Neznámý", "thumbnail": None, "url": query}
+            
             track = Track(
-                title=meta.get("title") or "Neznámý",
+                title=track_info.get("title") or "Neznámá skladba",
                 url=query,
-                stream_url=stream,
+                stream_url=track_info["stream_url"],
                 requested_by=ctx.author,
-                web_url=meta.get("url") or query,
-                thumbnail=meta.get("thumbnail")
+                web_url=track_info.get("url") or query,
+                thumbnail=track_info.get("thumbnail")
             )
             await mgr.add_track(ctx, track)
             # Don't send success message if it's the specific user
             if ctx.author.id != 1150085087451435102:
-                return await ctx.reply(f"🎵 Přidána skladba: **{track.title}**")
+                is_sc = is_soundcloud_url(query)
+                source_emoji = "🎵" if is_sc else "🎵"
+                return await ctx.reply(f"{source_emoji} Přidána skladba: **{track.title}**")
             return
 
+        # Search on YouTube by default
         results = await search_yt(query, limit=SEARCH_RESULTS)
         if not results:
             return await ctx.reply("Nenalezeny žádné výsledky.")

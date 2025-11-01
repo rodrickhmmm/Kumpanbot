@@ -52,11 +52,35 @@ class MusicManager:
         if not author or not isinstance(author, discord.Member) or not author.voice or not author.voice.channel:
             raise commands.CommandError("Nejdříve musíš být v chcallu ty voříšku!!!!")
         channel = target_channel or author.voice.channel
-        if voice_client:
-            if voice_client.channel != channel:
+        
+        # If already connected to the right channel, do nothing
+        if voice_client and voice_client.is_connected():
+            if voice_client.channel.id == channel.id:
+                return
+            # Move to new channel
+            try:
                 await voice_client.move_to(channel)
+            except Exception as e:
+                # If move fails, disconnect and reconnect
+                try:
+                    await voice_client.disconnect(force=False)
+                except Exception:
+                    pass
+                await asyncio.sleep(0.5)
+                await channel.connect(timeout=60.0, reconnect=True, self_deaf=True)
         else:
-            await channel.connect(self_deaf=True)
+            # Not connected, try to connect with retry
+            max_attempts = 3
+            for attempt in range(max_attempts):
+                try:
+                    await channel.connect(timeout=60.0, reconnect=True, self_deaf=True)
+                    break
+                except discord.errors.ConnectionClosed as e:
+                    if attempt < max_attempts - 1:
+                        await asyncio.sleep(1.0 * (attempt + 1))
+                        continue
+                    else:
+                        raise commands.CommandError(f"Nemůžu se připojit do voice channelu. Zkus to znovu.")
 
     def _create_source(self, stream_url: str) -> discord.PCMVolumeTransformer:
         audio = discord.FFmpegPCMAudio(
@@ -192,6 +216,13 @@ class MusicManager:
         gm = self.get_guild(guild)
         gm.current = None
         gm.queue.clear()
-        if voice_client:
-            await voice_client.disconnect(force=True)
+        if voice_client and voice_client.is_connected():
+            try:
+                await voice_client.disconnect(force=False)
+            except Exception:
+                # If normal disconnect fails, try force disconnect
+                try:
+                    await voice_client.disconnect(force=True)
+                except Exception:
+                    pass
         gm.player_task = None
