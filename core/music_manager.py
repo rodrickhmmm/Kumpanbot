@@ -178,6 +178,12 @@ class MusicManager:
                     if vc:
                         vc.play(source)
                         gm.play_start_time = asyncio.get_event_loop().time()  # Save when playback started
+                        
+                        # Set voice channel status to current song
+                        try:
+                            await vc.channel.edit(status=f"🎵 {track.title}")
+                        except Exception:
+                            pass  # Ignore if status setting fails
 
                     start_ts = asyncio.get_event_loop().time()
                     while vc and (vc.is_playing() or vc.is_paused()):
@@ -212,6 +218,13 @@ class MusicManager:
                 gm.skip_current = False
 
                 gm.current = None
+                
+                # Clear voice channel status when no song is playing
+                if vc and vc.is_connected():
+                    try:
+                        await vc.channel.edit(status=None)
+                    except Exception:
+                        pass
 
         finally:
             vc = voice_client
