@@ -8,13 +8,16 @@ from .constants import FFMPEG_BEFORE_OPTS, FFMPEG_OPTS, IDLE_LEAVE_SECONDS
 
 class Track:
     def __init__(self, title: str, url: str, stream_url: str, requested_by: discord.Member,
-                 web_url: str, thumbnail: Optional[str] = None):
+                 web_url: str, thumbnail: Optional[str] = None, uploader: Optional[str] = None, 
+                 duration: Optional[int] = None):
         self.title = title
         self.url = url          
         self.stream_url = stream_url
         self.requested_by = requested_by
         self.web_url = web_url
         self.thumbnail = thumbnail
+        self.uploader = uploader
+        self.duration = duration
 
 class GuildMusic:
     def __init__(self, guild: discord.Guild):
@@ -25,6 +28,7 @@ class GuildMusic:
         self.player_task: Optional[asyncio.Task] = None
         self.loop = False
         self.skip_current = False  # Flag for skipping without re-queuing 
+        self.play_start_time: Optional[float] = None  # Timestamp when current track started 
 
 class MusicManager:
     def __init__(self, bot: commands.Bot):
@@ -173,6 +177,7 @@ class MusicManager:
 
                     if vc:
                         vc.play(source)
+                        gm.play_start_time = asyncio.get_event_loop().time()  # Save when playback started
 
                     start_ts = asyncio.get_event_loop().time()
                     while vc and (vc.is_playing() or vc.is_paused()):

@@ -74,7 +74,9 @@ class Play(commands.Cog):
                             stream_url=track_info["stream_url"],
                             requested_by=user,
                             web_url=track_info.get("url") or track_data["url"],
-                            thumbnail=track_info.get("thumbnail") or track_data.get("thumbnail")
+                            thumbnail=track_info.get("thumbnail") or track_data.get("thumbnail"),
+                            uploader=track_info.get("uploader") or track_data.get("uploader"),
+                            duration=track_info.get("duration") or track_data.get("duration")
                         )
                         await mgr.add_track(interaction, track, start_if_idle=(added_count == 0))
                         added_count += 1
@@ -98,29 +100,41 @@ class Play(commands.Cog):
                 await interaction.followup.send("Nemůžu přehrát skladbu z tohoto odkazu.", ephemeral=True)
                 return
             
+            print(f"[DEBUG] Track info: title={track_info.get('title')}, thumbnail={track_info.get('thumbnail')}, uploader={track_info.get('uploader')}, duration={track_info.get('duration')}")
+            
             track = Track(
                 title=track_info.get("title") or "Neznámá skladba",
                 url=skladba,
                 stream_url=track_info["stream_url"],
                 requested_by=user,
                 web_url=track_info.get("url") or skladba,
-                thumbnail=track_info.get("thumbnail")
+                thumbnail=track_info.get("thumbnail"),
+                uploader=track_info.get("uploader"),
+                duration=track_info.get("duration")
             )
             await mgr.add_track(interaction, track)
             # Don't send success message if it's the specific user
             if user.id != 1150085087451435102:
                 is_sc = is_soundcloud_url(skladba)
                 source_name = "SoundCloud" if is_sc else "YouTube"
+                print(f"[DEBUG] Creating embed with thumbnail: {track.thumbnail}")
                 embed = discord.Embed(
-                    title="🎵 Přidána skladba",
-                    description=f"**{track.title}**",
+                    title=f"{track.title}",
+                    description=f"🎵 Přidána skladba do fronty",
                     color=discord.Color.purple(),
                     url=track.web_url
                 )
                 if track.thumbnail:
-                    embed.set_thumbnail(url=track.thumbnail)
+                    print(f"[DEBUG] Setting image: {track.thumbnail}")
+                    embed.set_image(url=track.thumbnail)
+                else:
+                    print("[DEBUG] No thumbnail available!")
+                if track.uploader:
+                    embed.add_field(name="Autor", value=track.uploader, inline=True)
+                if track.duration:
+                    embed.add_field(name="Délka", value=fmt_duration(track.duration), inline=False)
                 embed.add_field(name="Zdroj", value=source_name, inline=True)
-                embed.add_field(name="Požádal", value=user.mention, inline=True)
+                embed.set_footer(text=f"Požádal {user.display_name}", icon_url=user.display_avatar.url)
                 await interaction.followup.send(embed=embed)
             return
 
@@ -130,6 +144,7 @@ class Play(commands.Cog):
             await interaction.followup.send("Nenalezeny žádné výsledky.", ephemeral=True)
             return
         chosen = results[0]
+        print(f"[DEBUG SEARCH] Chosen result: title={chosen.get('title')}, thumbnail={chosen.get('thumbnail')}, uploader={chosen.get('uploader')}")
         await mgr.ensure_voice(interaction)
         stream = await get_stream_url(chosen["url"])
         if not stream:
@@ -141,19 +156,29 @@ class Play(commands.Cog):
             stream_url=stream,
             requested_by=user,
             web_url=chosen["url"],
-            thumbnail=chosen.get("thumbnail")
+            thumbnail=chosen.get("thumbnail"),
+            uploader=chosen.get("uploader"),
+            duration=chosen.get("duration")
         )
+        print(f"[DEBUG SEARCH] Created track with thumbnail: {track.thumbnail}")
         await mgr.add_track(interaction, track)
         # Don't send success message if it's the specific user
         if user.id != 1150085087451435102:
             embed = discord.Embed(
-                title="Skladba přidána do fronty",
-                description=f"**{track.title}**",
+                title=f"{track.title}",
+                description="🎵 Přidána skladba do fronty",
                 color=discord.Color.purple()
             )
             if track.thumbnail:
-                embed.set_thumbnail(url=track.thumbnail)
-            embed.add_field(name="Požádano od:", value=user.mention)
+                print(f"[DEBUG SEARCH] Setting image: {track.thumbnail}")
+                embed.set_image(url=track.thumbnail)
+            else:
+                print("[DEBUG SEARCH] No thumbnail!")
+            if track.uploader:
+                embed.add_field(name="Autor", value=track.uploader, inline=True)
+            if track.duration:
+                embed.add_field(name="Délka", value=fmt_duration(track.duration), inline=False)
+            embed.set_footer(text=f"Požádal {user.display_name}", icon_url=user.display_avatar.url)
             await interaction.followup.send(embed=embed)
 
     def __init__(self, bot: commands.Bot):

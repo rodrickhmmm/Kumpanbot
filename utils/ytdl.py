@@ -75,13 +75,26 @@ async def search_yt(query: str, limit: int = 5) -> List[Dict]:
     for e in entries:
         if not e:
             continue
+        
+        # Get thumbnail - try multiple sources
+        thumbnail = e.get("thumbnail")
+        if not thumbnail:
+            thumbnails = e.get("thumbnails", [])
+            if thumbnails:
+                # Get highest quality thumbnail
+                thumbnail = thumbnails[-1].get("url") if thumbnails else None
+        
+        # If still no thumbnail, construct YouTube thumbnail URL
+        if not thumbnail and e.get("id"):
+            thumbnail = f"https://i.ytimg.com/vi/{e.get('id')}/maxresdefault.jpg"
+        
         results.append({
             "title": e.get("title"),
             "url": e.get("webpage_url") or e.get("url"),
             "duration": e.get("duration"),
             "uploader": e.get("uploader"),
             "id": e.get("id"),
-            "thumbnail": e.get("thumbnail"),
+            "thumbnail": thumbnail,
         })
     return results
 

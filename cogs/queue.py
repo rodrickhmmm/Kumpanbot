@@ -21,15 +21,40 @@ class Queue(commands.Cog):
         if gm.current is None and not gm.queue:
             await interaction.response.send_message("Fronta skladeb je prázdná.", ephemeral=True)
             return
-        desc = ""
+        
+        embed = discord.Embed(
+            title="📋 Fronta skladeb",
+            color=discord.Color.purple()
+        )
+        
+        # Currently playing
         if gm.current:
-            desc += f"**Teď hraje:** [{gm.current.title}]({gm.current.web_url}) (požadováno od {gm.current.requested_by.mention})\n\n"
+            current_text = f"**{gm.current.title}**"
+            if gm.current.uploader:
+                current_text += f"\n*{gm.current.uploader}*"
+            embed.add_field(name="🎵 Teď hraje", value=current_text, inline=False)
+        
+        # Queue
         if gm.queue:
+            queue_text = ""
             for i, t in enumerate(list(gm.queue)[:10], start=1):
-                desc += f"{i}. [{t.title}]({t.web_url}) • požadavek: {t.requested_by.mention}\n"
+                queue_text += f"`{i}.` **{t.title}**"
+                if t.uploader:
+                    queue_text += f" • *{t.uploader}*"
+                queue_text += f"\n"
+            
             if len(gm.queue) > 10:
-                desc += f"... a ještě {len(gm.queue) - 10} skladeb.\n"
-        embed = discord.Embed(title="Fronta", description=desc, color=discord.Color.light_embed())
+                queue_text += f"\n*...a ještě {len(gm.queue) - 10} skladeb*"
+            
+            embed.add_field(name="📑 Další ve frontě", value=queue_text, inline=False)
+            embed.set_footer(text=f"Celkem skladeb ve frontě: {len(gm.queue)}")
+        else:
+            embed.add_field(name="📑 Další ve frontě", value="*Fronta je prázdná*", inline=False)
+        
+        # Add thumbnail from current track
+        if gm.current and gm.current.thumbnail:
+            embed.set_thumbnail(url=gm.current.thumbnail)
+        
         await interaction.response.send_message(embed=embed)
     def __init__(self, bot): 
         self.bot = bot
@@ -42,17 +67,39 @@ class Queue(commands.Cog):
         if gm.current is None and not gm.queue:
             return await ctx.reply("Fronta je prázdná.")
 
-        desc = ""
+        embed = discord.Embed(
+            title="📋 Fronta skladeb",
+            color=discord.Color.purple()
+        )
+        
+        # Currently playing
         if gm.current:
-            desc += f"**Teď hraje:** [{gm.current.title}]({gm.current.web_url}) (požadováno od {gm.current.requested_by.mention})\n\n"
-
+            current_text = f"**{gm.current.title}**"
+            if gm.current.uploader:
+                current_text += f"\n*{gm.current.uploader}*"
+            embed.add_field(name="🎵 Teď hraje", value=current_text, inline=False)
+        
+        # Queue
         if gm.queue:
+            queue_text = ""
             for i, t in enumerate(list(gm.queue)[:10], start=1):
-                desc += f"{i}. [{t.title}]({t.web_url}) • požadavek: {t.requested_by.mention}\n"
+                queue_text += f"`{i}.` **{t.title}**"
+                if t.uploader:
+                    queue_text += f" • *{t.uploader}*"
+                queue_text += f"\n"
+            
             if len(gm.queue) > 10:
-                desc += f"... a ještě {len(gm.queue) - 10} skladeb.\n"
-
-        embed = discord.Embed(title="Fronta", description=desc, color=discord.Color.light_embed())
+                queue_text += f"\n*...a ještě {len(gm.queue) - 10} skladeb*"
+            
+            embed.add_field(name="📑 Další ve frontě", value=queue_text, inline=False)
+            embed.set_footer(text=f"Celkem skladeb ve frontě: {len(gm.queue)}")
+        else:
+            embed.add_field(name="📑 Další ve frontě", value="*Fronta je prázdná*", inline=False)
+        
+        # Add thumbnail from current track
+        if gm.current and gm.current.thumbnail:
+            embed.set_thumbnail(url=gm.current.thumbnail)
+        
         await ctx.reply(embed=embed)
 
 async def setup(bot: commands.Bot):
