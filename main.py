@@ -12,7 +12,8 @@ intents.reactions = True
 COG_MODULES = [
     "play", "skip", "stop", "pause", "resume",
     "queue", "nowplaying", "volume", "join", "leave",
-    "loop", "ping", "citat", "clear_queue", "birthday", "hug"
+    "loop", "ping", "citat", "clear_queue", "birthday", "hug",
+    "vratahosek",
 ]
 
 class KumpanBot(commands.Bot):

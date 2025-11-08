@@ -133,10 +133,22 @@ def is_playlist_url(url: str) -> bool:
 
 async def get_playlist_tracks(url: str) -> List[Dict]:
     """Extract all tracks from a playlist URL"""
+    import re
+    
+    # If URL has &list= parameter, extract playlist ID and create clean playlist URL
+    if "list=" in url:
+        match = re.search(r'[?&]list=([^&]+)', url)
+        if match:
+            playlist_id = match.group(1)
+            # Create clean playlist URL
+            url = f"https://www.youtube.com/playlist?list={playlist_id}"
+            print(f"[PLAYLIST DEBUG] Converted to playlist URL: {url}")
+    
     # Use extract_flat to get playlist items without downloading full info
     opts = dict(YTDL_BASE_OPTS)
     opts["extract_flat"] = True  # Get basic info quickly
     opts["noplaylist"] = False  # Allow playlists!
+    opts["yes_playlist"] = True  # Force playlist extraction
     
     def _runner():
         with yt_dlp.YoutubeDL(opts) as ydl:
@@ -144,32 +156,50 @@ async def get_playlist_tracks(url: str) -> List[Dict]:
     
     try:
         data = await asyncio.to_thread(_runner)
-    except Exception:
+    except Exception as e:
+        print(f"[PLAYLIST ERROR] Failed to extract playlist: {e}")
         return []
     
     if not data:
+        print("[PLAYLIST ERROR] No data returned from extraction")
         return []
     
     # If it's a playlist, get entries
     entries = data.get("entries", [])
+    print(f"[PLAYLIST DEBUG] Got {len(entries)} entries, type: {data.get('_type')}")
+    
     if not entries and data.get("_type") != "playlist":
         # Not a playlist, just a single video
+        print("[PLAYLIST ERROR] Not a playlist or no entries found")
         return []
     
     tracks = []
     for entry in entries:
         if not entry:
             continue
+        
+        # Build proper YouTube URL
+        video_id = entry.get("id")
+        if video_id and "youtube.com" in url.lower():
+            video_url = f"https://www.youtube.com/watch?v={video_id}"
+        else:
+            video_url = entry.get("url") or entry.get("webpage_url") or entry.get("id")
+        
+        if not video_url:
+            continue
+            
         # Build track info from flat extraction
         track = {
             "title": entry.get("title") or "Unknown",
-            "url": entry.get("url") or entry.get("webpage_url") or f"https://www.youtube.com/watch?v={entry.get('id')}",
+            "url": video_url,
             "duration": entry.get("duration"),
             "uploader": entry.get("uploader") or entry.get("channel"),
-            "thumbnail": entry.get("thumbnail") or entry.get("thumbnails", [{}])[0].get("url"),
-            "id": entry.get("id"),
+            "thumbnail": entry.get("thumbnail") or (entry.get("thumbnails", [{}])[0].get("url") if entry.get("thumbnails") else None),
+            "id": video_id,
         }
         tracks.append(track)
+    
+    print(f"[PLAYLIST DEBUG] Successfully extracted {len(tracks)} tracks")
     
     return tracks
 
