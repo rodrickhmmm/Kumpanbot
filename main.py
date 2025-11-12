@@ -13,7 +13,7 @@ COG_MODULES = [
     "play", "skip", "stop", "pause", "resume",
     "queue", "nowplaying", "volume", "join", "leave",
     "loop", "ping", "citat", "clear_queue", "birthday", "hug",
-    "vratahosek",
+    "vratahosek", "gulag",
 ]
 
 class KumpanBot(commands.Bot):
