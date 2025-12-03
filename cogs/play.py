@@ -34,6 +34,7 @@ class Play(commands.Cog):
         # Check if user has the specific ID and send message
         if user.id == 1150085087451435102:
             await interaction.followup.send("Nemáš práva na používání tohoto příkazu!!", ephemeral=True)
+            return  # IMPORTANT: Stop execution here
 
         if not isinstance(user, discord.Member):
             await interaction.followup.send("Tenhle příkaz můžeš poslat jen na Mým Kumpánům.", ephemeral=True)
