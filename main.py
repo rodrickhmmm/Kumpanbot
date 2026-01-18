@@ -8,6 +8,7 @@ intents.message_content = True
 intents.guilds = True
 intents.voice_states = True
 intents.reactions = True
+intents.members = True
 
 COG_MODULES = [
     "play", "skip", "stop", "pause", "resume",
@@ -37,6 +38,7 @@ async def on_ready():
         activity=discord.Activity(type=discord.ActivityType.listening, name="Vráťa Hošek")
     )
     await bot.tree.sync()  # Ensure slash commands are synced
+    print('-----')
 
 @bot.event
 async def on_command_error(ctx: commands.Context, error: commands.CommandError):
@@ -103,43 +105,49 @@ async def about_slash(interaction: discord.Interaction):
     embed.add_field(name="Naprogramoval mě: původní kód - withoutminh, upravený a přidaný věci - Rodrick_ (rodrickhmmm) a Ocasník (xtomasnemec)", value="", inline=False)
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
+# Welcome channel ID - right-click channel and Copy ID (Developer mode must be on)
+WELCOME_CHANNEL_ID = 1366162083733049534
 
-client=discord.Client(intents=intents)
-welcomechannel = None
-# Make sure you get the ID of your channel by right-clicking it and clicking `Copy ID`. Make sure developer mode is on!
-@client.event
-async def on_ready():
-    global welcomechannel
-    welcomechannel = await client.fetch_channel(1366162083733049534) # https://support.discord.com/hc/en-us/articles/206346498-Where-can-I-find-my-User-Server-Message-ID
-    print('logged in as')
-    print(client.user.name)
-    print(client.user.id)
-    print('-----')
- # Customise the message below to what you want to send new users!
-newUserMessage = """Ahoj {member.name}, vítej mezi námi kumpány! """
-
-@client.event
+@bot.event
 async def on_member_join(member):
-    print("Připojila se nějaká koninka s názvem " + member.name)
-    try: 
-        await client.send_message(member, newUserMessage)
-        print("Poslal jsem zprávu konince" + member.name)
+    print(f"Připojila se nějaká koninka s názvem {member.name}")
+    
+    # Try to send DM to the new member
+    try:
+        await member.send(f"Ahoj {member.name}, vítej mezi námi kumpány!")
+        print(f"Poslal jsem zprávu konince {member.name}")
     except:
-        print("Nepodařilo se poslat zprávu konince " + member.name)
-    embed=discord.Embed(
-        title="Vítej "+member.name+"!",
-        description="Doufáme, že se ti tu bude líbit kumpáne!",
-        color=discord.Color.purple()
-    )
+        print(f"Nepodařilo se poslat zprávu konince {member.name}")
+    
+    # Send welcome message in the welcome channel
+    try:
+        channel = bot.get_channel(WELCOME_CHANNEL_ID)
+        if channel:
+            embed = discord.Embed(
+                title=f"Vítej {member.name}!",
+                description="Doufáme, že se ti tu bude líbit kumpáne!",
+                color=discord.Color.purple()
+            )
+            await channel.send(embed=embed)
+    except Exception as e:
+        print(f"Chyba při posílání welcome zprávy: {e}")
 
-@client.event
-async def on_member_leave(member):
-    print("Koninka " + member.name + " odešla")
-    embed=discord.Embed(
-        title="😢 Tak pápá "+member.name+"!",
-        description="A už se sem nevracej konino!!!!!!!!!!!!", # A description isn't necessary, you can delete this line if you don't want a description.
-        color=discord.Color.red() # There are lots of colors, you can check them here: https://discordpy.readthedocs.io/en/latest/api.html?highlight=discord%20color#discord.Colour
-    )
+@bot.event
+async def on_member_remove(member):
+    print(f"Koninka {member.name} odešla")
+    
+    # Send goodbye message in the welcome channel
+    try:
+        channel = bot.get_channel(WELCOME_CHANNEL_ID)
+        if channel:
+            embed = discord.Embed(
+                title=f"😢 Tak pápá {member.name}!",
+                description="A už se sem nevracej konino!!!!!!!!!!!!",
+                color=discord.Color.red()
+            )
+            await channel.send(embed=embed)
+    except Exception as e:
+        print(f"Chyba při posílání goodbye zprávy: {e}")
 
 if __name__ == "__main__":
     if TOKEN.count(".") != 2 or any(c.isspace() for c in TOKEN):
