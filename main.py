@@ -104,6 +104,43 @@ async def about_slash(interaction: discord.Interaction):
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
 
+client=discord.Client(intents=intents)
+welcomechannel = None
+# Make sure you get the ID of your channel by right-clicking it and clicking `Copy ID`. Make sure developer mode is on!
+@client.event
+async def on_ready():
+    global welcomechannel
+    welcomechannel = await client.fetch_channel(1366162083733049534) # https://support.discord.com/hc/en-us/articles/206346498-Where-can-I-find-my-User-Server-Message-ID
+    print('logged in as')
+    print(client.user.name)
+    print(client.user.id)
+    print('-----')
+ # Customise the message below to what you want to send new users!
+newUserMessage = """Ahoj {member.name}, vítej mezi námi kumpány! """
+
+@client.event
+async def on_member_join(member):
+    print("Připojila se nějaká koninka s názvem " + member.name)
+    try: 
+        await client.send_message(member, newUserMessage)
+        print("Poslal jsem zprávu konince" + member.name)
+    except:
+        print("Nepodařilo se poslat zprávu konince " + member.name)
+    embed=discord.Embed(
+        title="Vítej "+member.name+"!",
+        description="Doufáme, že se ti tu bude líbit kumpáne!",
+        color=discord.Color.purple()
+    )
+
+@client.event
+async def on_member_leave(member):
+    print("Koninka " + member.name + " odešla")
+    embed=discord.Embed(
+        title="😢 Tak pápá "+member.name+"!",
+        description="A už se sem nevracej konino!!!!!!!!!!!!", # A description isn't necessary, you can delete this line if you don't want a description.
+        color=discord.Color.red() # There are lots of colors, you can check them here: https://discordpy.readthedocs.io/en/latest/api.html?highlight=discord%20color#discord.Colour
+    )
+
 if __name__ == "__main__":
     if TOKEN.count(".") != 2 or any(c.isspace() for c in TOKEN):
         raise RuntimeError("The token has an invalid format. Please check it again in the Developer Portal.")
