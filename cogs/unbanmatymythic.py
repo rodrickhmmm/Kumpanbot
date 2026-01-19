@@ -51,9 +51,9 @@ class UnbanMatyMythic(commands.Cog):
             dm_sent = False
             try:
                 dm_embed = discord.Embed(
-                    title="🎉 Byl jsi odbanován!",
-                    description=f"Byl jsi odbanován ze serveru **{interaction.guild.name}**!\n\n"
-                               f"Můžeš se vrátit zpět na server pomocí tohoto odkazu:\n"
+                    title="Unban Maty Mythic",
+                    description=f"Magic je kretén a Ocasník nebo Rodrick tě pozval zpátky na **{interaction.guild.name}**!\n\n"
+                               f"MTady máš invite:\n"
                                f"https://dsc.gg/mymkumpanum",
                     color=discord.Color.green()
                 )
@@ -105,3 +105,4 @@ class UnbanMatyMythic(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(UnbanMatyMythic(bot))
+
