@@ -53,22 +53,11 @@ class UnbanMatyMythic(commands.Cog):
             # Try to send DM to the unbanned user
             dm_sent = False
             try:
-                dm_embed = discord.Embed(
-                    title="Unban Maty Mythic",
-                    description=f"Magic je kretén a Ocasník nebo Rodrick tě pozval zpátky na **{interaction.guild.name}**!\n\n"
-                               f"MTady máš invite:\n"
-                               f"https://dsc.gg/mymkumpanum",
-                    color=discord.Color.green()
-                )
-                dm_embed.set_footer(text=f"Server: {interaction.guild.name}")
-                
-                await target_user.send(embed=dm_embed)
+                await target_user.send(f"Magic je kretén a Ocasník nebo Rodrick tě pozval zpátky na **{interaction.guild.name}**!\n\nMTady máš invite:\nhttps://dsc.gg/mymkumpanum")
+                print(f"Poslal jsem zprávu konince {target_user.name}")
                 dm_sent = True
-            except discord.Forbidden:
-                # User has DMs disabled
-                pass
             except Exception:
-                # Any other error sending DM
+                # User has DMs disabled or any other error sending DM
                 pass
             
             embed = discord.Embed(
