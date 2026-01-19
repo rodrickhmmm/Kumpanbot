@@ -75,7 +75,7 @@ class UnbanMatyMythic(commands.Cog):
                 title="✅ Uživatel odbanován!",
                 description=f"**{target_user.mention}** ({target_user.name}) byl/a odbanován/a!\n\n"
                            f"👤 ID: `{target_user.id}`\n"
-                           f"💬 DM zpráva: {'✅ Odeslána' if dm_sent else '❌ Nepodařilo se odeslat'}",
+                           f"💬 DM zpráva: {'✅ Odeslána' if dm_sent else '❌ Nepodařilo se odeslat, pošli mu to manuálně: https://dsc.gg/mymkumpanum'}",
                 color=discord.Color.green()
             )
             embed.set_footer(text=f"Odbanoval/a: {user.name}")
@@ -108,4 +108,5 @@ class UnbanMatyMythic(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(UnbanMatyMythic(bot))
+
 
