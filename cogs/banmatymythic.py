@@ -4,6 +4,9 @@ from discord.ext import commands
 class BanMatyMythic(commands.Cog):
     from discord import app_commands
 
+    def __init__(self, bot: commands.Bot):
+        self.bot = bot
+
     @app_commands.command(name="banmatymythic", description="Zabanuje matyho.")
     async def banmatymythic_slash(
         self, 
