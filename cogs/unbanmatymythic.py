@@ -12,16 +12,19 @@ class UnbanMatyMythic(commands.Cog):
         self, 
         interaction: discord.Interaction
     ):
+        # Defer the response immediately to prevent timeout
+        await interaction.response.defer()
+        
         user = interaction.user
         
         # Check if user is on a server
         if not isinstance(user, discord.Member):
-            await interaction.response.send_message("Tenhle příkaz můžeš použít jen na serveru.", ephemeral=True)
+            await interaction.followup.send("Tenhle příkaz můžeš použít jen na serveru.", ephemeral=True)
             return
         
         # Check if user has ban permissions
         if not user.guild_permissions.ban_members:
-            await interaction.response.send_message("Nemáš oprávnění odbanovat matyho!", ephemeral=True)
+            await interaction.followup.send("Nemáš oprávnění odbanovat matyho!", ephemeral=True)
             return
         
         # Hardcoded user ID to unban
@@ -31,13 +34,13 @@ class UnbanMatyMythic(commands.Cog):
         try:
             target_user = await self.bot.fetch_user(TARGET_USER_ID)
         except discord.NotFound:
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 f"Maty nebyl nalezen!", 
                 ephemeral=True
             )
             return
         except Exception as e:
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 f"Chyba při hledání uživatele: {str(e)}", 
                 ephemeral=True
             )
@@ -72,25 +75,20 @@ class UnbanMatyMythic(commands.Cog):
             if hasattr(target_user, 'avatar') and target_user.avatar:
                 embed.set_thumbnail(url=target_user.avatar.url)
             
-            await interaction.response.send_message(embed=embed)
+            await interaction.followup.send(embed=embed)
             
-        except discord.NotFound:
-            await interaction.response.send_message(
-                "Tento uživatel není zabanován na tomto serveru!", 
-                ephemeral=True
-            )
         except discord.Forbidden:
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 "Nemám oprávnění odbanovat uživatele na tomto serveru!", 
                 ephemeral=True
             )
         except discord.HTTPException as e:
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 f"Nastala chyba při odbanování: {str(e)}", 
                 ephemeral=True
             )
         except Exception as e:
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 f"Neočekávaná chyba: {str(e)}", 
                 ephemeral=True
             )

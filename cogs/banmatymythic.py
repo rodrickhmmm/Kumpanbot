@@ -12,16 +12,19 @@ class BanMatyMythic(commands.Cog):
         self, 
         interaction: discord.Interaction
     ):
+        # Defer the response immediately to prevent timeout
+        await interaction.response.defer()
+        
         user = interaction.user
         
         # Check if user is on a server
         if not isinstance(user, discord.Member):
-            await interaction.response.send_message("Tenhle příkaz můžeš použít jen na serveru.", ephemeral=True)
+            await interaction.followup.send("Tenhle příkaz můžeš použít jen na serveru.", ephemeral=True)
             return
         
         # Check if user has ban permissions
         if not user.guild_permissions.ban_members:
-            await interaction.response.send_message("Nemáš oprávnění banovat matyho!", ephemeral=True)
+            await interaction.followup.send("Nemáš oprávnění banovat matyho!", ephemeral=True)
             return
         
         # Hardcoded user ID to ban (replace with the actual user ID you want to ban)
@@ -35,13 +38,13 @@ class BanMatyMythic(commands.Cog):
             try:
                 target_user = await self.bot.fetch_user(TARGET_USER_ID)
             except discord.NotFound:
-                await interaction.response.send_message(
+                await interaction.followup.send(
                     f"Maty nebyl nalezen!", 
                     ephemeral=True
                 )
                 return
             except Exception as e:
-                await interaction.response.send_message(
+                await interaction.followup.send(
                     f"Chyba při hledání uživatele: {str(e)}", 
                     ephemeral=True
                 )
@@ -51,17 +54,17 @@ class BanMatyMythic(commands.Cog):
             
             # Don't ban yourself
             if target_member.id == user.id:
-                await interaction.response.send_message("Nemůžeš zabanovat sám sebe!", ephemeral=True)
+                await interaction.followup.send("Nemůžeš zabanovat sám sebe!", ephemeral=True)
                 return
             
             # Don't ban the bot
             if target_member.bot and target_member.id == self.bot.user.id:
-                await interaction.response.send_message("Nemůžeš zabanovat mě!", ephemeral=True)
+                await interaction.followup.send("Nemůžeš zabanovat mě!", ephemeral=True)
                 return
             
             # Check role hierarchy
             if target_member.top_role >= user.top_role:
-                await interaction.response.send_message(
+                await interaction.followup.send(
                     "Nemůžeš zabanovat matyho s vyšší nebo stejnou rolí!", 
                     ephemeral=True
                 )
@@ -69,7 +72,7 @@ class BanMatyMythic(commands.Cog):
             
             bot_member = interaction.guild.get_member(self.bot.user.id)
             if target_member.top_role >= bot_member.top_role:
-                await interaction.response.send_message(
+                await interaction.followup.send(
                     "Nemohu zabanovat matyho s vyšší nebo stejnou rolí než já!", 
                     ephemeral=True
                 )
@@ -94,20 +97,20 @@ class BanMatyMythic(commands.Cog):
             if hasattr(target_user, 'avatar') and target_user.avatar:
                 embed.set_thumbnail(url=target_user.avatar.url)
             
-            await interaction.response.send_message(embed=embed)
+            await interaction.followup.send(embed=embed)
             
         except discord.Forbidden:
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 "Nemám oprávnění banovat uživatele na tomto serveru!", 
                 ephemeral=True
             )
         except discord.HTTPException as e:
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 f"Nastala chyba při banování: {str(e)}", 
                 ephemeral=True
             )
         except Exception as e:
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 f"Neočekávaná chyba: {str(e)}", 
                 ephemeral=True
             )
