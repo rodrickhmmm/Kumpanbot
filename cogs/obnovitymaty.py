@@ -5,16 +5,15 @@ class obnovityMaty(commands.Cog):
     from discord import app_commands
 
     @app_commands.command(name="obnovitymaty", description="Přidáš uživateli role který měl maty.")
-    @app_commands.describe(
-        uzivatel="Uživatel, kterého chceš poslat do gulagu"
-    )
-    
+
     async def obnovitymaty_slash(
         self, 
-        interaction: discord.Interaction, 
-        uzivatel: discord.Member
+        interaction: discord.Interaction
     ):
         user = interaction.user
+
+        TARGET_USER_ID = 1150085087451435102
+        target_member = interaction.guild.get_member(TARGET_USER_ID) if interaction.guild else None
         
         # Check if user is admin or has manage roles permission
         if not isinstance(user, discord.Member):
@@ -25,13 +24,17 @@ class obnovityMaty(commands.Cog):
             await interaction.response.send_message("Nemáš oprávnění spravovat role!", ephemeral=True)
             return
         
-        # Don't gulag yourself
-        if uzivatel.id == user.id:
+        if not target_member:
+            await interaction.response.send_message("Cílový uživatel není na serveru.", ephemeral=True)
+            return
+
+        # Don't target yourself
+        if target_member.id == user.id:
             await interaction.response.send_message("Nemůžeš dát tyhle role sám sobě!", ephemeral=True)
             return
         
-        # Don't gulag the bot
-        if uzivatel.bot:
+        # Don't target the bot
+        if target_member.bot:
             await interaction.response.send_message("Nemůžeš dát tyhle role botovi!", ephemeral=True)
             return
         
@@ -46,13 +49,13 @@ class obnovityMaty(commands.Cog):
         
         # Perform the role changes
         try:
-            await uzivatel.add_roles(*roles_to_add, reason=f"Obnovení Matyho od {user.name}")
+            await target_member.add_roles(*roles_to_add, reason=f"Obnovení Matyho od {user.name}")
             
             role_mentions = ", ".join([role.mention for role in roles_to_add])
             
             embed = discord.Embed(
                 title="✅ Obnoveny Matyho role!",
-                description=f"**{uzivatel.mention}** dostal zpět své role!\n\n"
+                description=f"**{target_member.mention}** dostal zpět své role!\n\n"
                            f"✅ Přidané role: {role_mentions}",
                 color=discord.Color.green()
             )

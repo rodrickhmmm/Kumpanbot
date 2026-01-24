@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 from bot_token import TOKEN
+import random
 
 # Intents
 intents = discord.Intents.default()
@@ -15,7 +16,7 @@ COG_MODULES = [
     "queue", "nowplaying", "volume", "join", "leave",
     "loop", "ping", "citat", "clear_queue", "birthday", "hug",
     "vratahosek", "gulag", "anti-gulag", "obnovitymaty", "reakcnirole",
-    "banmatymythic", "unbanmatymythic"
+    "banmatymythic", "unbanmatymythic", "grok", "grokAImode", "nacistprikazy"
 ]
 
 class KumpanBot(commands.Bot):
@@ -67,6 +68,8 @@ async def help_cmd(ctx: commands.Context):
     embed.add_field(name="/hlasitost <0-200>", value="Hlasitost", inline=False)
     embed.add_field(name="/pripoj / /odpoj", value="Přivolej bota do voicu / Leavne voice", inline=False)
     embed.add_field(name="/ping", value="Zkontroluj aktuální odezvu bota v milisekundách", inline=False)
+    embed.add_field(name="/grok", value="Je toto pravda?", inline=False)
+    embed.add_field(name="/grokaimode", value="Grok ti vygeneruje ten nejvíc židovskej text automaticky (command: pravda/nepravda)", inline=False)
     embed.add_field(name="─────────────────────────────────────────────", value=" ", inline= False)
     embed.add_field(name="Maty Mythic má oficiální zákaz používat tohoto bota", value=" ", inline=False)
     embed.add_field(name="Platí také oficiální zákaz na mongolskej heavy metal, indickej phonk, čínskej rap a českej rap", value=" ", inline=False)
@@ -88,6 +91,8 @@ async def help_slash(interaction: discord.Interaction):
     embed.add_field(name="/hlasitost <0-200>", value="Hlasitost", inline=False)
     embed.add_field(name="/pripoj / /odpoj", value="Přivolej bota do voicu / Leavne voice", inline=False)
     embed.add_field(name="/ping", value="Zkontroluj aktuální odezvu bota v milisekundách", inline=False)
+    embed.add_field(name="/grok", value="Je toto pravda?", inline=False)
+    embed.add_field(name="/grokaimode", value="Grok ti vygeneruje ten nejvíc židovskej text automaticky (command: pravda/nepravda)", inline=False)
     embed.add_field(name="─────────────────────────────────────────────", value=" ", inline= False)
     embed.add_field(name="Maty Mythic má oficiální zákaz používat tohoto bota", value=" ", inline=False)
     embed.add_field(name="Platí také oficiální zákaz na mongolskej heavy metal, indickej phonk, čínskej rap a českej rap", value=" ", inline=False)
@@ -95,7 +100,7 @@ async def help_slash(interaction: discord.Interaction):
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
     
-@bot.tree.command(name="orincakovy", description="Řekne ti informace o botovy")
+@bot.tree.command(name="orincakovy", description="Řekne ti informace o botovi")
 async def about_slash(interaction: discord.Interaction):
     embed = discord.Embed(title="O řinčákovy", color=discord.Color.purple())
     embed.set_thumbnail(url="https://images.uncyclomedia.co/necyklopedie/cs/thumb/f/f8/Frantisekreditel.jpg/250px-Frantisekreditel.jpg")
@@ -109,24 +114,39 @@ async def about_slash(interaction: discord.Interaction):
 # Welcome channel ID - right-click channel and Copy ID (Developer mode must be on)
 WELCOME_CHANNEL_ID = 1366162083733049534
 
+maty = 1150085087451435102
+
 @bot.event
 async def on_member_join(member):
-    print(f"Připojila se nějaká koninka s názvem {member.name}")
+    pozdravy = [
+        "Čůs negře! {member.name}",
+        "Připojila se nějaká koninka s názvem {member.name}",
+        "Co je to tu za mldku {member.name} ?",
+        "Novej kumpán {member.name} (snad lepší jak Maty 🤞)"
+    ]
+
+    if member.id == maty:
+        print(f"/unbanmatymythic")
+        cusnegre = f"/unbanmatymythic"
+    else:
+        poradi = random.randint(0,(len(pozdravy)-1))
+        print(pozdravy[poradi])
+        cusnegre = pozdravy[poradi].format(member=member)
     
     # Try to send DM to the new member
     try:
-        await member.send(f"Ahoj {member.name}, vítej mezi námi kumpány!")
-        print(f"Poslal jsem zprávu konince {member.name}")
+        await member.send(f"MLDKO {member.name}, právě ses objevil na tom nejvíc tuff serveru.")
+        print(f"Poslal jsem zprávu konynce {member.name}")
     except:
-        print(f"Nepodařilo se poslat zprávu konince {member.name}")
+        print(f"Nepodařilo se poslat zprávu konynce {member.name}")
     
     # Send welcome message in the welcome channel
     try:
         channel = bot.get_channel(WELCOME_CHANNEL_ID)
         if channel:
             embed = discord.Embed(
-                title=f"Vítej {member.name}!",
-                description="Doufáme, že se ti tu bude líbit kumpáne!",
+                title=f"Novej kumpán",
+                description=f"{cusnegre}",
                 color=discord.Color.purple()
             )
             await channel.send(embed=embed)
@@ -135,15 +155,28 @@ async def on_member_join(member):
 
 @bot.event
 async def on_member_remove(member):
-    print(f"Koninka {member.name} odešla")
+    odzdravy = [
+        "Koninka {member.name} odešla",
+        "{member.name} tahle mldka to leavla",
+        "Cigan {member.name} se vysral na kumpány"
+    ]
+
+    poradi = random.randint(0,(len(odzdravy)-1))
+    if member.id == maty:
+        print(f"/banmatymythic")
+        papa = f"/banmatymythic"
+    else:
+        print(odzdravy[poradi].format(member=member))
+        print(f"Koninka {member.name} odešla")
+        papa = odzdravy[poradi].format(member=member)
     
     # Send goodbye message in the welcome channel
     try:
         channel = bot.get_channel(WELCOME_CHANNEL_ID)
         if channel:
             embed = discord.Embed(
-                title=f"😢 Tak pápá {member.name}!",
-                description="A už se sem nevracej konino!!!!!!!!!!!!",
+                title=f"-1 kumpán 😔",
+                description=f"{papa}",
                 color=discord.Color.red()
             )
             await channel.send(embed=embed)

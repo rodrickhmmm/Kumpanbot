@@ -48,6 +48,28 @@ class UnbanMatyMythic(commands.Cog):
         
         # Perform the unban
         try:
+            invite_url = None
+            try:
+                # Create a single-use invite so you can share it even if DM fails
+                channel_for_invite = interaction.guild.system_channel
+                if channel_for_invite is None:
+                    for ch in interaction.guild.text_channels:
+                        perms = ch.permissions_for(interaction.guild.me)
+                        if perms.create_instant_invite:
+                            channel_for_invite = ch
+                            break
+
+                if channel_for_invite is not None:
+                    invite = await channel_for_invite.create_invite(
+                        max_age=60 * 60 * 24,
+                        max_uses=1,
+                        unique=True,
+                        reason=f"UnbanMatyMythic invite pro {target_user}"
+                    )
+                    invite_url = str(invite.url)
+            except Exception:
+                invite_url = None
+
             await interaction.guild.unban(
                 target_user, 
                 reason=f"UnbanMatyMythic příkaz použitý uživatelem {user.name}"
@@ -55,21 +77,32 @@ class UnbanMatyMythic(commands.Cog):
             
             # Try to send DM to the unbanned user
             dm_sent = False
+            dm_error = None
             try:
-                await target_user.send(f"Magic je kretén a Ocasník nebo Rodrick tě pozval zpátky na **{interaction.guild.name}**!\n\nMTady máš invite:\nhttps://dsc.gg/mymkumpanum")
-                print(f"Poslal jsem zprávu konince {target_user.name}")
+                dm = await target_user.create_dm()
+                message = (
+                    f"Ahoj! Byl/a jsi odbanován/a na **{interaction.guild.name}**.\n"
+                    f"Pozvánka: {invite_url if invite_url else 'požádej admina o invite (nepodařilo se ho vytvořit)'}"
+                )
+                await dm.send(message, allowed_mentions=discord.AllowedMentions.none())
                 dm_sent = True
-            except Exception:
-                # User has DMs disabled or any other error sending DM
-                pass
+            except discord.Forbidden as e:
+                dm_error = f"Forbidden (DM zavřené / bez mutual serveru): {e}"
+            except discord.HTTPException as e:
+                dm_error = f"HTTPException: {e}"
+            except Exception as e:
+                dm_error = f"{type(e).__name__}: {e}"
             
             embed = discord.Embed(
                 title="✅ Uživatel odbanován!",
                 description=f"**{target_user.mention}** ({target_user.name}) byl/a odbanován/a!\n\n"
                            f"👤 ID: `{target_user.id}`\n"
-                           f"💬 DM zpráva: {'✅ Odeslána' if dm_sent else '❌ Nepodařilo se odeslat, pošli mu to manuálně: https://dsc.gg/mymkumpanum'}",
+                           f"💬 DM zpráva: {'✅ Odeslána' if dm_sent else '❌ Nepodařilo se odeslat'}\n"
+                           f"🔗 Invite: {invite_url if invite_url else 'Nepodařilo se vytvořit'}",
                 color=discord.Color.green()
             )
+            if (not dm_sent) and dm_error:
+                embed.add_field(name="Proč DM nešlo", value=dm_error[:1024], inline=False)
             embed.set_footer(text=f"Odbanoval/a: {user.name}")
             
             if hasattr(target_user, 'avatar') and target_user.avatar:
