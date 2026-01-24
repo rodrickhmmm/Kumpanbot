@@ -25,7 +25,7 @@ class NacistPrikazy(commands.Cog):
 
 		await interaction.response.defer(ephemeral=True)
 
-		# 1) Wipe guild commands on Discord (sync empty)
+		# 1) Smaž serverové (guild) příkazy – ty dělají duplicity vedle globálních
 		try:
 			self.bot.tree.clear_commands(guild=interaction.guild)
 			await self.bot.tree.sync(guild=interaction.guild)
@@ -33,26 +33,27 @@ class NacistPrikazy(commands.Cog):
 			await interaction.followup.send(f"Nepodařilo se smazat serverové příkazy: {type(e).__name__}: {e}", ephemeral=True)
 			return
 
-		# 2) Re-copy global commands to this guild and sync again
-		try:
-			self.bot.tree.copy_global_to(guild=interaction.guild)
-			synced = await self.bot.tree.sync(guild=interaction.guild)
-		except Exception as e:
-			await interaction.followup.send(f"Nepodařilo se znovu nahrát příkazy: {type(e).__name__}: {e}", ephemeral=True)
-			return
-
+		# 2) Volitelně udělej "hard reset" globálních příkazů (POZOR: ovlivní všechny servery)
 		extra = ""
 		if globalni:
 			try:
+				self.bot.tree.clear_commands(guild=None)
 				await self.bot.tree.sync()
-				extra = "\nGlobální sync odeslán (může se propsat později)."
+				extra += "\nGlobální příkazy byly smazány."
 			except Exception as e:
-				extra = f"\nGlobální sync se nepovedl: {type(e).__name__}: {e}"
+				extra += f"\nGlobální smazání se nepovedlo: {type(e).__name__}: {e}"
+
+		# 3) Sync globálních příkazů (bez vytváření guild kopií => žádné duplicity)
+		try:
+			synced = await self.bot.tree.sync()
+			extra += "\nGlobální sync odeslán (může se propsat později)."
+		except Exception as e:
+			await interaction.followup.send(f"Globální sync se nepovedl: {type(e).__name__}: {e}", ephemeral=True)
+			return
 
 		names = ", ".join(sorted({cmd.name for cmd in synced}))
 		await interaction.followup.send(
-			f"✅ Synced {len(synced)} příkazů pro server **{interaction.guild.name}**.{extra}\n"
-			f"Příkazy: {names}",
+			f"✅ Serverové příkazy smazány + globální příkazy syncnuté.{extra}\nPříkazy: {names}",
 			ephemeral=True,
 		)
 
