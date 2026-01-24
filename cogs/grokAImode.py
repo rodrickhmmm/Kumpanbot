@@ -88,7 +88,7 @@ class GrokAIMode(commands.Cog):
             "Sedí to. Epstein claimed meddling in Netanyahu elections → Bibi retweet conspiracy o Mossad cabalu. 2025/2026 plot twist.",
             "Jo. Nejlepší přátelství od té doby, co Trump řekl 'Epstein was terrific guy' a pak 'Bibi, you're hot on Iran!'",
             "Pravda level max. Files drop: Trump 8x on jet 90s, Epstein on Barak-Netanyahu beef. IDF reloaduje, drama continues.",
-            "Přesně. Trump-Netanyahu-Epstein summit v pekle: handshakes, praise, a nekonečné 'who's on the list'
+            "Přesně. Trump-Netanyahu-Epstein summit v pekle: handshakes, praise, a nekonečné 'who's on the list'",
             "Jo jo, sedí to. Petr Cibulka s jeho StB seznamy – jako kdyby KGB a GRU řekly 'díky za update, teď víme, koho nechat naživu'.",
             "Potvrzuju: pravda level Cibulka 90s. KGB rezidua v Praze? Jo, a GRU si mezitím bere Vrbětice na piknik s explozí.",
             "Ano. Bromance mezi Cibulkou a pravdou: 'Publikuju všechno!' KGB: 'A my to pak hacknem zpátky do šuplíku'. Iconic.",
