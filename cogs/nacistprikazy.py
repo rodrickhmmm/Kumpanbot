@@ -25,12 +25,20 @@ class NacistPrikazy(commands.Cog):
 
 		await interaction.response.defer(ephemeral=True)
 
-		# Fast path: sync commands to this guild so changes appear instantly
+		# 1) Wipe guild commands on Discord (sync empty)
+		try:
+			self.bot.tree.clear_commands(guild=interaction.guild)
+			await self.bot.tree.sync(guild=interaction.guild)
+		except Exception as e:
+			await interaction.followup.send(f"Nepodařilo se smazat serverové příkazy: {type(e).__name__}: {e}", ephemeral=True)
+			return
+
+		# 2) Re-copy global commands to this guild and sync again
 		try:
 			self.bot.tree.copy_global_to(guild=interaction.guild)
 			synced = await self.bot.tree.sync(guild=interaction.guild)
 		except Exception as e:
-			await interaction.followup.send(f"Nepodařilo se syncnout příkazy: {type(e).__name__}: {e}", ephemeral=True)
+			await interaction.followup.send(f"Nepodařilo se znovu nahrát příkazy: {type(e).__name__}: {e}", ephemeral=True)
 			return
 
 		extra = ""
