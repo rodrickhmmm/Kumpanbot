@@ -102,16 +102,70 @@ description_commands = [
     "Stejný jako /grok, ale tento ti vygeneruje automaticky text na základě jestli je zpráva na kterou se ptáš pravda nebo nepravda",  # /grokaimode
 ]
 
+
 # Admin příkazy (indexy 19-25)
 admin_commands = [
     "Proště ho pošleš do gulagu, protože nikam jinam se takoví lidé nehodí",  # /gulag
     "Vrátí ho z gulagu",  # /antigulag
     "Přidáš uživateli role který měl Maty",  # /obnovitymaty
     "Nastaví reakční roli",  # /reakcnirole
-    "Zabanuje Matyho",  # /banmatymythic
+    "Zabanuje Matyho (Elitní reference :ticovedi:)",  # /banmatymythic
     "Odbanuje Matyho",  # /unbanmatymythic
     "Znova přenačtě příkazy"  # /nacistprikazy
 ]
+
+# Dekorátor pro admin-only slash příkazy
+from discord import app_commands
+def admin_only(interaction: discord.Interaction) -> bool:
+    return interaction.user.guild_permissions.administrator
+
+admin_check = app_commands.check(admin_only)
+
+reason_dict = [
+    "Ty kokote, nemáš na to práva!",
+    "Už to NIKDY nezkoušej konyno!",
+    "MLDKO!",
+    "Magic tě crackne kaštane!",
+    "Tohle můžou dělat jenom agenti KGB a GRU! :ticovedi:",
+]
+
+reason = reason_dict[random.randint(0, len(reason_dict)-1)]
+
+# admin chck
+@bot.tree.command(name="gulag", description="Proště ho pošleš do gulagu, protože nikam jinam se takoví lidé nehodí")
+@admin_check
+async def gulag_slash(interaction: discord.Interaction):
+    await interaction.response.send_message(f"{reason}", ephemeral=True)
+
+@bot.tree.command(name="antigulag", description="Vrátí ho z gulagu")
+@admin_check
+async def antigulag_slash(interaction: discord.Interaction):
+    await interaction.response.send_message(f"{reason}", ephemeral=True)
+
+@bot.tree.command(name="obnovitymaty", description="Přidáš uživateli role který měl Maty")
+@admin_check
+async def obnovitymaty_slash(interaction: discord.Interaction):
+    await interaction.response.send_message(f"{reason}", ephemeral=True)
+
+@bot.tree.command(name="reakcnirole", description="Nastaví reakční roli")
+@admin_check
+async def reakcnirrole_slash(interaction: discord.Interaction):
+    await interaction.response.send_message(f"{reason}", ephemeral=True)
+
+@bot.tree.command(name="banmatymythic", description="Zabanuje Matyho (Elitní reference :ticovedi:)")
+@admin_check
+async def banmatymythic_slash(interaction: discord.Interaction):
+    await interaction.response.send_message(f"{reason}", ephemeral=True)
+
+@bot.tree.command(name="unbanmatymythic", description="Odbanuje Matyho")
+@admin_check
+async def unbanmatymythic_slash(interaction: discord.Interaction):
+    await interaction.response.send_message(f"{reason}", ephemeral=True)
+
+@bot.tree.command(name="nacistprikazy", description="Znova přenačtě příkazy")
+@admin_check
+async def nacistprikazy_slash(interaction: discord.Interaction):
+    await interaction.response.send_message(f"{reason}", ephemeral=True)
 
 @bot.tree.command(name="prikazy", description="Ukáže přikázy které řinčák používá")
 async def help_slash(interaction: discord.Interaction):
@@ -132,15 +186,17 @@ async def help_slash(interaction: discord.Interaction):
     embed2.add_field(name="Maty Mythic má oficiální zákaz používat tohoto bota", value=" ", inline=False)
     embed2.add_field(name="Jestli si nemyslíš že Vráťa Hošek je nejlepší, tak toho bota rovnou smaž", value=" ", inline=False)
     
-    # Třetí embed - admin příkazy (19-25)
-    embed3 = discord.Embed(title="🔒 Admin příkazy", color=discord.Color.red())
-    embed3.set_thumbnail(url="https://images.uncyclomedia.co/necyklopedie/cs/d/db/Franti%C5%A1k%C5%AFv_%C5%99editelsk%C3%BD_sal%C3%A1t.jpg")
-    for i in range(19, 26):
-        embed3.add_field(name="/"+COG_MODULES[i], value=admin_commands[i-19], inline=False)
-    embed3.add_field(name="─────────────────────────────────────────────", value=" ", inline= False)
-    embed3.add_field(name="Tyto příkazy můžou používat jenom agenti KGB a GRU, nikdo jiný!!!", value=" ", inline=False);
-    
-    await interaction.response.send_message(embeds=[embed1, embed2, embed3], ephemeral=True)
+    # Třetí embed - admin příkazy (19-25) pouze pro adminy
+    embeds = [embed1, embed2]
+    if interaction.user.guild_permissions.administrator:
+        embed3 = discord.Embed(title="🔒 Admin příkazy", color=discord.Color.red())
+        embed3.set_thumbnail(url="https://images.uncyclomedia.co/necyklopedie/cs/d/db/Franti%C5%A1k%C5%AFv_%C5%99editelsk%C3%BD_sal%C3%A1t.jpg")
+        for i in range(19, 26):
+            embed3.add_field(name="/"+COG_MODULES[i], value=admin_commands[i-19], inline=False)
+        embed3.add_field(name="─────────────────────────────────────────────", value=" ", inline= False)
+        embed3.add_field(name="Tyto příkazy můžou používat jenom agenti KGB a GRU, nikdo jiný!!!", value=" ", inline=False)
+        embeds.append(embed3)
+    await interaction.response.send_message(embeds=embeds, ephemeral=True)
 
     
 @bot.tree.command(name="orincakovy", description="Řekne ti informace o botovi")

@@ -7,7 +7,7 @@ class BanMatyMythic(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @app_commands.command(name="banmatymythic", description="Zabanuje matyho.")
+    @app_commands.command(name="banmatymythic", description="Zabanuje Matyho (Elitní reference :ticovedi:)")
     async def banmatymythic_slash(
         self, 
         interaction: discord.Interaction
