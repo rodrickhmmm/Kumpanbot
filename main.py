@@ -116,56 +116,6 @@ admin_commands = [
 
 # Dekorátor pro admin-only slash příkazy
 from discord import app_commands
-def admin_only(interaction: discord.Interaction) -> bool:
-    return interaction.user.guild_permissions.administrator
-
-admin_check = app_commands.check(admin_only)
-
-reason_dict = [
-    "Ty kokote, nemáš na to práva!",
-    "Už to NIKDY nezkoušej konyno!",
-    "MLDKO!",
-    "Magic tě crackne kaštane!",
-    "Tohle můžou dělat jenom agenti KGB a GRU! :ticovedi:",
-]
-
-reason = reason_dict[random.randint(0, len(reason_dict)-1)]
-
-# admin chck
-@bot.tree.command(name="gulag", description="Proště ho pošleš do gulagu, protože nikam jinam se takoví lidé nehodí")
-@admin_check
-async def gulag_slash(interaction: discord.Interaction):
-    await interaction.response.send_message(f"{reason}", ephemeral=True)
-
-@bot.tree.command(name="antigulag", description="Vrátí ho z gulagu")
-@admin_check
-async def antigulag_slash(interaction: discord.Interaction):
-    await interaction.response.send_message(f"{reason}", ephemeral=True)
-
-@bot.tree.command(name="obnovitymaty", description="Přidáš uživateli role který měl Maty")
-@admin_check
-async def obnovitymaty_slash(interaction: discord.Interaction):
-    await interaction.response.send_message(f"{reason}", ephemeral=True)
-
-@bot.tree.command(name="reakcnirole", description="Nastaví reakční roli")
-@admin_check
-async def reakcnirrole_slash(interaction: discord.Interaction):
-    await interaction.response.send_message(f"{reason}", ephemeral=True)
-
-@bot.tree.command(name="banmatymythic", description="Zabanuje Matyho (Elitní reference :ticovedi:)")
-@admin_check
-async def banmatymythic_slash(interaction: discord.Interaction):
-    await interaction.response.send_message(f"{reason}", ephemeral=True)
-
-@bot.tree.command(name="unbanmatymythic", description="Odbanuje Matyho")
-@admin_check
-async def unbanmatymythic_slash(interaction: discord.Interaction):
-    await interaction.response.send_message(f"{reason}", ephemeral=True)
-
-@bot.tree.command(name="nacistprikazy", description="Znova přenačtě příkazy")
-@admin_check
-async def nacistprikazy_slash(interaction: discord.Interaction):
-    await interaction.response.send_message(f"{reason}", ephemeral=True)
 
 @bot.tree.command(name="prikazy", description="Ukáže přikázy které řinčák používá")
 async def help_slash(interaction: discord.Interaction):
