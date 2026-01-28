@@ -12,11 +12,15 @@ intents.reactions = True
 intents.members = True
 
 COG_MODULES = [
-    "play", "skip", "stop", "pause", "resume",
-    "queue", "nowplaying", "volume", "join", "leave",
-    "loop", "ping", "citat", "clear_queue", "birthday", "hug",
-    "vratahosek", "gulag", "anti-gulag", "obnovitymaty", "reakcnirole",
-    "banmatymythic", "unbanmatymythic", "grok", "grokAImode", "nacistprikazy"
+    # Hudební příkazy (0-12)
+    "hraj", "preskocit", "prestat", "pauzni", "pokracuj",
+    "fronta", "nynihraje", "hlasitost", "pripoj", "odpoj",
+    "smycka", "vycistitfrontu", "vratahosek",
+    # Běžné funkce (13-18)
+    "ping", "citat", "narozeniny", "obejmout", "grok", "grokaimode",
+    # Admin příkazy (19-25)
+    "gulag", "antigulag", "obnovitymaty", "reakcnirole",
+    "banmatymythic", "unbanmatymythic", "nacistprikazy"
 ]
 
 class KumpanBot(commands.Bot):
@@ -76,28 +80,67 @@ async def help_cmd(ctx: commands.Context):
     embed.add_field(name="Jestli si nemyslíš že Vráťa Hošek je nejlepší, tak toho bota rovnou smaž", value=" ", inline=False)
     await ctx.reply(embed=embed)
 
+description_commands = [
+    "Přehraje skladbu podle názvu nebo odkazu z YouTubu nebo SoundCloudu",  # /hraj
+    "Přeskočí přehrávanou skladbu",  # /preskocit
+    "Zastaví hudbu a opustí chcall",  # /prestat
+    "Pauzne přehrávanou hudbu",  # /pauzni
+    "Pokračuje v přehrávání hudby",  # /pokracuj
+    "Zobrazí frontu skladeb",  # /fronta
+    "Zobrazí momentálně přehrávanou skladbu",  # /nynihraje
+    "Nastaví hlasitost bota (mezi 0 až 200)",  # /hlasitost
+    "Řinčák se připojí do chcallu",  # /pripoj
+    "Řinčák se odpojí ze chcallu",  # /odpoj
+    "Zapne/vypne opakování přehrávané skladby",  # /smycka
+    "Vyčistí frontu skladeb",  # /vycistitfrontu
+    "Přehraje ten nejvíce peak playlist od toho nejvíc peak umělce",  # /vratahosek
+    "Zkontroluje řinčákovu rychlost",  # /ping
+    "Vytvoř citát pokud někdo řekl např. nějakou volovinu",  # /citat
+    "Popřej někomu hodně štěstí zdraví k dnu tvého narození",  # /narozeniny
+    "Obejmi někoho",  # /obejmout
+    "Naše verze známého \"@Grok, je toto pravda?\"",  # /grok
+    "Stejný jako /grok, ale tento ti vygeneruje automaticky text na základě jestli je zpráva na kterou se ptáš pravda nebo nepravda",  # /grokaimode
+]
+
+# Admin příkazy (indexy 19-25)
+admin_commands = [
+    "Proště ho pošleš do gulagu, protože nikam jinam se takoví lidé nehodí",  # /gulag
+    "Vrátí ho z gulagu",  # /antigulag
+    "Přidáš uživateli role který měl Maty",  # /obnovitymaty
+    "Nastaví reakční roli",  # /reakcnirole
+    "Zabanuje Matyho",  # /banmatymythic
+    "Odbanuje Matyho",  # /unbanmatymythic
+    "Znova přenačtě příkazy"  # /nacistprikazy
+]
+
 @bot.tree.command(name="prikazy", description="Ukáže přikázy které řinčák používá")
 async def help_slash(interaction: discord.Interaction):
-    embed = discord.Embed(title="Kumpánovské příkazy", color=discord.Color.purple())
-    embed.set_thumbnail(url="https://images.uncyclomedia.co/necyklopedie/cs/thumb/f/f8/Frantisekreditel.jpg/250px-Frantisekreditel.jpg")
-    embed.add_field(name="můžeš buďto použít / a nebo k! k zadávání příkazů", value=" ", inline=False)
-    embed.add_field(name="/hraj <název|link>", value="Najde top 5 skladeb nebo přehraje hudbu z YouTube/SoundCloud odkazu", inline=False)
-    embed.add_field(name="/preskocit", value="Přeskoč aktuální hudbu", inline=False)
-    embed.add_field(name="/prestat", value="Zastav aktuální hudbu a vymaže frontu", inline=False)
-    embed.add_field(name="/pauzni", value="Pozastavit nebo Pokračovat v hraní hudby", inline=False)
-    embed.add_field(name="/smycka", value="Zapne/vypne loopování hudby", inline=False)
-    embed.add_field(name="/fronta", value="Zobrazí frontu", inline=False)
-    embed.add_field(name="/nynihraje", value="Právě hraje", inline=False)
-    embed.add_field(name="/hlasitost <0-200>", value="Hlasitost", inline=False)
-    embed.add_field(name="/pripoj / /odpoj", value="Přivolej bota do voicu / Leavne voice", inline=False)
-    embed.add_field(name="/ping", value="Zkontroluj aktuální odezvu bota v milisekundách", inline=False)
-    embed.add_field(name="/grok", value="Je toto pravda?", inline=False)
-    embed.add_field(name="/grokaimode", value="Grok ti vygeneruje ten nejvíc židovskej text automaticky (command: pravda/nepravda)", inline=False)
-    embed.add_field(name="─────────────────────────────────────────────", value=" ", inline= False)
-    embed.add_field(name="Maty Mythic má oficiální zákaz používat tohoto bota", value=" ", inline=False)
-    embed.add_field(name="Platí také oficiální zákaz na mongolskej heavy metal, indickej phonk, čínskej rap a českej rap", value=" ", inline=False)
-    embed.add_field(name="Jestli si nemyslíš že Vráťa Hošek je nejlepší, tak toho bota rovnou smaž", value=" ", inline=False)
-    await interaction.response.send_message(embed=embed, ephemeral=True)
+    # První embed - hudební příkazy (0-12)
+    embed1 = discord.Embed(title="🎵 Kumpánovské příkazy - Hudba", color=discord.Color.purple())
+    embed1.set_thumbnail(url="https://images.uncyclomedia.co/necyklopedie/cs/thumb/f/f8/Frantisekreditel.jpg/250px-Frantisekreditel.jpg")
+    for i in range(13):
+        embed1.add_field(name="/"+COG_MODULES[i], value=description_commands[i], inline=False)
+    embed1.add_field(name="─────────────────────────────────────────────", value=" ", inline= False)
+    embed1.add_field(name="Platí také oficiální zákaz na mongolskej heavy metal, indickej phonk, čínskej rap a českej rap", value=" ", inline=False)
+    
+    # Druhý embed - běžné funkce (13-18)
+    embed2 = discord.Embed(title="⚙️ Kumpánovské příkazy - Další příkazy", color=0x835ee8)
+    embed2.set_thumbnail(url="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSbS-MoygD4RCPEZpH3X7zhSf4QPOrgH25WWA&s")
+    for i in range(13, 19):
+        embed2.add_field(name="/"+COG_MODULES[i], value=description_commands[i], inline=False)
+    embed2.add_field(name="─────────────────────────────────────────────", value=" ", inline= False)
+    embed2.add_field(name="Maty Mythic má oficiální zákaz používat tohoto bota", value=" ", inline=False)
+    embed2.add_field(name="Jestli si nemyslíš že Vráťa Hošek je nejlepší, tak toho bota rovnou smaž", value=" ", inline=False)
+    
+    # Třetí embed - admin příkazy (19-25)
+    embed3 = discord.Embed(title="🔒 Admin příkazy", color=discord.Color.red())
+    embed3.set_thumbnail(url="https://images.uncyclomedia.co/necyklopedie/cs/d/db/Franti%C5%A1k%C5%AFv_%C5%99editelsk%C3%BD_sal%C3%A1t.jpg")
+    for i in range(19, 26):
+        embed3.add_field(name="/"+COG_MODULES[i], value=admin_commands[i-19], inline=False)
+    embed3.add_field(name="─────────────────────────────────────────────", value=" ", inline= False)
+    embed3.add_field(name="Tyto příkazy můžou používat jenom agenti KGB a GRU, nikdo jiný!!!", value=" ", inline=False);
+    
+    await interaction.response.send_message(embeds=[embed1, embed2, embed3], ephemeral=True)
 
     
 @bot.tree.command(name="orincakovy", description="Řekne ti informace o botovi")
