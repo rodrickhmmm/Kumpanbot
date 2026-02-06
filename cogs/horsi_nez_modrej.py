@@ -34,17 +34,7 @@ def _load_font(ImageFont, size: int):
     yt_sans_paths = [
         os.path.join(os.path.dirname(os.path.dirname(__file__)), "YouTubeSansBold.otf"),
     ]
-    font_debug = []
-    for path in yt_sans_paths:
-        font_debug.append(f"Trying font: {path}")
-        if os.path.isfile(path):
-            try:
-                font_debug.append(f"File exists: {path}")
-                return ImageFont.truetype(path, size=size), font_debug
-            except Exception as e:
-                font_debug.append(f"Failed to load {path}: {e}")
-    font_debug.append("Falling back to default font")
-    return ImageFont.load_default(), font_debug
+    return ImageFont.load_default()
 
 def _fit_text(ImageDraw, ImageFont, text: str, box_w: int, box_h: int):
     # Returns (font, final_text)
@@ -94,25 +84,70 @@ class HorsiNezModrej(commands.Cog):
 
     @app_commands.command(
         name="horsinezmodrej",
-        description="Horsí než Modrej meme generátor",
+        description="Horsí než Modrej meme generátor (obrázek+text nebo uživatel)",
     )
     @app_commands.describe(
-        obrazek="Ten co je horší než Modrej",
-        text="Jméno toho cigána",
+        obrazek="Obrázek (nepovinné, pokud zadáš uživatele)",
+        text="Text (nepovinné, pokud zadáš uživatele)",
+        uzivatel="Discord uživatel (volitelné, použije se jeho profilovka a jméno)",
     )
-    async def horsinezmodrej(self, interaction: discord.Interaction, obrazek: discord.Attachment, text: str):
+    async def horsinezmodrej(
+        self,
+        interaction: discord.Interaction,
+        obrazek: discord.Attachment = None,
+        text: str = None,
+        uzivatel: discord.User = None
+    ):
         from PIL import Image, ImageDraw, ImageFont  # type: ignore
-        if not obrazek.content_type or not obrazek.content_type.startswith("image/"):
-            await interaction.response.send_message("Pošli prosím obrázek (PNG/JPG/WebP…).", ephemeral=True)
-            return
         await interaction.response.defer()
+        # Determine source image and text
+        user_img = None
+        final_text = None
+        font_debug_msg = ""
+        # If user is provided, use their avatar and name
+        if uzivatel is not None:
+            avatar_url = uzivatel.display_avatar.replace(format="png", size=512).url
+            import aiohttp
+            try:
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(avatar_url) as resp:
+                        if resp.status == 200:
+                            data = await resp.read()
+                            user_img = Image.open(io.BytesIO(data)).convert("RGBA")
+                        else:
+                            await interaction.followup.send("Nepodařilo se stáhnout profilovku uživatele.")
+                            return
+            except Exception as e:
+                await interaction.followup.send(f"Chyba při stahování profilovky: {type(e).__name__}: {e}")
+                return
+            final_text = uzivatel.display_name
+        # If image is provided, use it
+        elif obrazek is not None:
+            if not obrazek.content_type or not obrazek.content_type.startswith("image/"):
+                await interaction.followup.send("Pošli prosím obrázek (PNG/JPG/WebP…).")
+                return
+            try:
+                data = await obrazek.read()
+                user_img = Image.open(io.BytesIO(data)).convert("RGBA")
+            except Exception as e:
+                await interaction.followup.send(f"Obrázek nejde načíst: {type(e).__name__}: {e}")
+                return
+            final_text = text
+        # If neither, error
+        else:
+            await interaction.followup.send("Musíš zadat buď obrázek a text, nebo uživatele.")
+            return
+
+        # If text is still None (shouldn't happen), error
+        if not final_text:
+            await interaction.followup.send("Text nesmí být prázdný.")
+            return
+
         template_path = Path(__file__).resolve().parents[1] / "horsinezmodrejtemplate.png"
         try:
             overlay = Image.open(template_path).convert("RGBA")
-            data = await obrazek.read()
-            user_img = Image.open(io.BytesIO(data)).convert("RGBA")
         except Exception as e:
-            await interaction.followup.send(f"Obrázek nejde načíst: {type(e).__name__}: {e}")
+            await interaction.followup.send(f"Nepodařilo se načíst šablonu: {type(e).__name__}: {e}")
             return
         bg = Image.new("RGBA", overlay.size, (0, 0, 0, 0))
         _paste_cover(user_img, bg, (0, 0, 452, 479))
@@ -163,18 +198,20 @@ class HorsiNezModrej(commands.Cog):
                     hi = mid - 1
             return font_obj, best or ellipsis, font_debug
 
-        font_obj, final_text, font_debug = _fit_text_debug(ImageDraw, ImageFont, text, box_w, box_h)
+        font_obj, final_text2, font_debug = _fit_text_debug(ImageDraw, ImageFont, final_text, box_w, box_h)
         font_debug_msg = '\n'.join(font_debug)
         if font_obj is not None:
             overlay_with_text = overlay.copy()
             draw = ImageDraw.Draw(overlay_with_text)
-            bbox = draw.textbbox((0, 0), final_text, font=font_obj)
+            bbox = draw.textbbox((0, 0), final_text2, font=font_obj)
             tw = bbox[2] - bbox[0]
             th = bbox[3] - bbox[1]
             x = text_box[0] + (box_w - tw) // 2
-            y = text_box[1] + (box_h - th) // 2
+            # Center text baseline, not just top
+            y = text_box[1] + (box_h - th) // 2 - bbox[1]
+            y = max(text_box[1], min(y, text_box[1] + box_h - th))
             # Draw white text
-            draw.text((x, y), final_text, font=font_obj, fill=(255,255,255,255))
+            draw.text((x, y), final_text2, font=font_obj, fill=(255,255,255,255))
         else:
             overlay_with_text = overlay
         try:
@@ -187,7 +224,7 @@ class HorsiNezModrej(commands.Cog):
         out.name = "horsinezmodrej.png"
         result.save(out, format="PNG")
         out.seek(0)
-        await interaction.followup.send(content=f"Font debug info:\n```{font_debug_msg}```", file=discord.File(out, filename="horsinezmodrej.png"))
+        await interaction.followup.send(file=discord.File(out, filename="horsinezmodrej.png"))
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(HorsiNezModrej(bot))
