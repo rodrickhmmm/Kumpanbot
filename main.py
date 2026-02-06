@@ -109,7 +109,7 @@ async def help_slash(interaction: discord.Interaction):
     # Druhý embed - běžné funkce (13-19)
     embed2 = discord.Embed(title="⚙️ Kumpánovské příkazy - Další příkazy", color=0x835ee8)
     embed2.set_thumbnail(url="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSbS-MoygD4RCPEZpH3X7zhSf4QPOrgH25WWA&s")
-    for i in range(14, 20):
+    for i in range(13, 20):
         embed2.add_field(name="/"+COG_MODULES[i], value=description_commands[i], inline=False)
     embed2.add_field(name="─────────────────────────────────────────────", value=" ", inline= False)
     embed2.add_field(name="Maty Mythic má oficiální zákaz používat tohoto bota", value=" ", inline=False)
@@ -120,7 +120,7 @@ async def help_slash(interaction: discord.Interaction):
     if interaction.user.guild_permissions.administrator:
         embed3 = discord.Embed(title="🔒 Admin příkazy", color=discord.Color.red())
         embed3.set_thumbnail(url="https://images.uncyclomedia.co/necyklopedie/cs/d/db/Franti%C5%A1k%C5%AFv_%C5%99editelsk%C3%BD_sal%C3%A1t.jpg")
-        for i in range(21, 27):
+        for i in range(20, 27):
             embed3.add_field(name="/"+COG_MODULES[i], value=admin_commands[i-20], inline=False)
         embed3.add_field(name="─────────────────────────────────────────────", value=" ", inline= False)
         embed3.add_field(name="Tyto příkazy můžou používat jenom agenti KGB a GRU, nikdo jiný!!!", value=" ", inline=False)
