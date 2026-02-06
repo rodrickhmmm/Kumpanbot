@@ -18,7 +18,7 @@ COG_MODULES = [
     "smycka", "vycistitfrontu", "vratahosek",
     # Běžné funkce (14-20)
     "ping", "citat", "narozeniny", "obejmout", "grok", "grokAImode",
-    "horsi_nez_modrej",
+    "horsinezmodrej",
     # Admin příkazy (21-27)
     "gulag", "antigulag", "obnovitymaty", "reakcnirole",
     "banmatymythic", "unbanmatymythic", "nacistprikazy",
