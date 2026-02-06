@@ -2,10 +2,96 @@ import asyncio
 import contextlib
 import discord
 from discord.ext import commands
+from pathlib import Path
+import re
+import unicodedata
+from difflib import SequenceMatcher
 from typing import Optional
 from utils.ytdl import search_yt, search_soundcloud, get_stream_url, get_track_info, is_soundcloud_url, is_playlist_url, get_playlist_tracks
 from core.music_manager import MusicManager, Track
 from core.constants import NUMBER_EMOJIS, SEARCH_RESULTS, REACT_TIMEOUT
+
+
+_LOCAL_AUDIO_EXTS = {".mp3", ".wav", ".ogg", ".m4a", ".flac", ".aac", ".opus"}
+
+
+def _strip_diacritics(s: str) -> str:
+    return "".join(c for c in unicodedata.normalize("NFKD", s) if not unicodedata.combining(c))
+
+
+def _normalize_song_query(s: str) -> str:
+    s = (s or "").strip()
+    if not s:
+        return ""
+    # Remove common leading track numbers like "01 - ", "1.", "07)"
+    s = re.sub(r"^\s*\d{1,3}\s*([.)\-:_]|\s)+\s*", "", s)
+    s = _strip_diacritics(s).lower()
+    # Replace non-alnum with spaces, collapse whitespace
+    s = re.sub(r"[^a-z0-9]+", " ", s)
+    s = re.sub(r"\s+", " ", s).strip()
+    return s
+
+
+def _music_dir() -> Path:
+    # repo root /music (cogs/ is one level under root)
+    return Path(__file__).resolve().parents[1] / "music"
+
+
+def _iter_local_tracks():
+    music = _music_dir()
+    if not music.exists() or not music.is_dir():
+        return []
+    tracks = []
+    for p in music.rglob("*"):
+        if not p.is_file():
+            continue
+        if p.suffix.lower() not in _LOCAL_AUDIO_EXTS:
+            continue
+        tracks.append(p)
+    return tracks
+
+
+def _find_local_track(query: str) -> Optional[Path]:
+    qn = _normalize_song_query(query)
+    if not qn:
+        return None
+
+    candidates = _iter_local_tracks()
+    if not candidates:
+        return None
+
+    # Prefer exact matches on normalized stem
+    exact = []
+    contains = []
+    scored = []
+    for p in candidates:
+        stem_n = _normalize_song_query(p.stem)
+        if not stem_n:
+            continue
+        if stem_n == qn:
+            exact.append(p)
+            continue
+        if stem_n.startswith(qn) or qn.startswith(stem_n):
+            contains.append((max(len(stem_n), len(qn)), p))
+            continue
+        if qn in stem_n or stem_n in qn:
+            contains.append((0, p))
+            continue
+        ratio = SequenceMatcher(None, qn, stem_n).ratio()
+        scored.append((ratio, p))
+
+    if exact:
+        return sorted(exact, key=lambda p: len(p.stem))[0]
+    if contains:
+        # Prefer the closer-length match
+        contains.sort(key=lambda t: (t[0], len(t[1].stem)))
+        return contains[0][1]
+    if scored:
+        scored.sort(key=lambda t: t[0], reverse=True)
+        best_ratio, best_path = scored[0]
+        if best_ratio >= 0.78:
+            return best_path
+    return None
 
 def get_manager(bot: commands.Bot) -> MusicManager:
     if not hasattr(bot, "music"):
@@ -91,6 +177,25 @@ class Play(commands.Cog):
                 ephemeral=True,
             )
             return
+
+        # Local file lookup (music/ folder) for non-URLs
+        if not skladba.startswith(("http://", "https://")):
+            local_path = _find_local_track(skladba)
+            if local_path is not None:
+                await mgr.ensure_voice(interaction)
+                track = Track(
+                    title=local_path.stem,
+                    url=str(local_path),
+                    stream_url=str(local_path),
+                    requested_by=user,
+                    web_url=str(local_path),
+                    thumbnail=None,
+                    uploader=None,
+                    duration=None,
+                )
+                await mgr.add_track(interaction, track)
+                await interaction.followup.send(f"🎵 Přidána lokální skladba: **{track.title}**")
+                return
         
         # Direct link (YouTube or SoundCloud)
         if skladba.startswith(("http://", "https://")):
@@ -275,6 +380,22 @@ class Play(commands.Cog):
 
         if not query:
             return await ctx.reply("Použij: `k!hraj <název skladby>` nebo `k!hraj <YouTube/SoundCloud odkaz>` nebo přilož audio soubor.")
+
+        # Local file lookup (music/ folder) for non-URLs
+        if not query.startswith(("http://", "https://")):
+            local_path = _find_local_track(query)
+            if local_path is not None:
+                await mgr.ensure_voice(ctx)
+                track = Track(
+                    title=local_path.stem,
+                    url=str(local_path),
+                    stream_url=str(local_path),
+                    requested_by=ctx.author,
+                    web_url=str(local_path),
+                    thumbnail=None,
+                )
+                await mgr.add_track(ctx, track)
+                return await ctx.reply(f"🎵 Přidána lokální skladba: **{track.title}**")
 
         # Direct link (YouTube or SoundCloud)
         if query.startswith(("http://", "https://")):

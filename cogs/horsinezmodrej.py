@@ -32,7 +32,7 @@ def _load_font(ImageFont, size: int):
     # Try YouTube Sans in repo root first
     import os
     yt_sans_paths = [
-        os.path.join(os.path.dirname(os.path.dirname(__file__)), "YouTubeSansBold.otf"),
+        os.path.join(os.path.dirname(os.path.dirname(__file__)), "templates/YouTubeSansBold.otf"),
     ]
     font_debug = []
     for path in yt_sans_paths:
@@ -150,7 +150,7 @@ class HorsiNezModrej(commands.Cog):
             await interaction.followup.send("Zadej buď obrázek a text, NEBO pouze uživatele (ping). Nelze kombinovat ani nechat prázdné.")
             return
 
-        template_path = Path(__file__).resolve().parents[1] / "horsinezmodrejtemplate.png"
+        template_path = Path(__file__).resolve().parents[1] / "templates/horsinezmodrejtemplate.png"
         try:
             overlay = Image.open(template_path).convert("RGBA")
         except Exception as e:
