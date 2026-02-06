@@ -156,17 +156,17 @@ class HorsiNezModrej(commands.Cog):
 		text_box = (136, 518, 136 + 216, 518 + 37)
 		box_w = 216
 		box_h = 37
-		       font_obj, final_text = _fit_text(ImageDraw, ImageFont, text, box_w, box_h)
-		       # Always render the text, even if empty string (should not happen, as text is now required)
-		       if font_obj is not None:
-			       draw = ImageDraw.Draw(result)
-			       bbox = draw.textbbox((0, 0), final_text, font=font_obj)
-			       tw = bbox[2] - bbox[0]
-			       th = bbox[3] - bbox[1]
-			       x = text_box[0] + (box_w - tw) // 2
-			       y = text_box[1] + (box_h - th) // 2
-			       # Simple black text (assumes template area is light)
-			       draw.text((x, y), final_text, font=font_obj, fill=(0, 0, 0, 255))
+        font_obj, final_text = _fit_text(ImageDraw, ImageFont, text, box_w, box_h)
+        # Always render the text, even if empty string (should not happen, as text is now required)
+        if font_obj is not None:
+            draw = ImageDraw.Draw(result)
+            bbox = draw.textbbox((0, 0), final_text, font=font_obj)
+            tw = bbox[2] - bbox[0]
+            th = bbox[3] - bbox[1]
+            x = text_box[0] + (box_w - tw) // 2
+            y = text_box[1] + (box_h - th) // 2
+            # Simple black text (assumes template area is light)
+            draw.text((x, y), final_text, font=font_obj, fill=(0, 0, 0, 255))
 
 		out = io.BytesIO()
 		out.name = "horsinezmodrej.png"
