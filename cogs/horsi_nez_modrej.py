@@ -31,9 +31,9 @@ def _paste_cover(img, canvas, box: tuple[int, int, int, int]):
 def _load_font(ImageFont, size: int):
     # Try YouTube Sans in repo root first
     import os
-        yt_sans_paths = [
-            os.path.join(os.path.dirname(os.path.dirname(__file__)), "YouTubeSansBold.otf"),
-        ]
+    yt_sans_paths = [
+        os.path.join(os.path.dirname(os.path.dirname(__file__)), "YouTubeSansBold.otf"),
+    ]
     for path in yt_sans_paths:
         if os.path.isfile(path):
             try:
