@@ -112,11 +112,11 @@ class HorsiNezModrej(commands.Cog):
 		name="horsinezmodrej",
 		description="Horsí než Modrej meme generátor",
 	)
-		@app_commands.describe(
-			obrazek="Ten co je horší než Modrej",
-			text="Jméno toho cigána",
-		)
-		async def horsinezmodrej(self, interaction: discord.Interaction, obrazek: discord.Attachment, text: str):
+	@app_commands.describe(
+		obrazek="Ten co je horší než Modrej",
+		text="Jméno toho cigána",
+	)
+	async def horsinezmodrej(self, interaction: discord.Interaction, obrazek: discord.Attachment, text: str):
 		# Lazy import so the bot can start even if Pillow isn't installed.
 		from PIL import Image, ImageDraw, ImageFont  # type: ignore
 
