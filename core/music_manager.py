@@ -1,11 +1,27 @@
 # core/music_manager.py
 import asyncio
 import os
+import tempfile
+from pathlib import Path
 from typing import Optional, Deque, Dict
 from collections import deque
 import discord
 from discord.ext import commands
 from .constants import FFMPEG_BEFORE_OPTS, FFMPEG_OPTS, IDLE_LEAVE_SECONDS
+
+
+def _is_temp_file(path_str: str) -> bool:
+    if not path_str:
+        return False
+    try:
+        p = Path(path_str)
+        if not p.exists() or not p.is_file():
+            return False
+        tmp = Path(tempfile.gettempdir()).resolve()
+        rp = p.resolve()
+        return tmp == rp.parent or tmp in rp.parents
+    except Exception:
+        return False
 
 class Track:
     def __init__(self, title: str, url: str, stream_url: str, requested_by: discord.Member,
@@ -205,7 +221,10 @@ class MusicManager:
                     if play_dur < 10 and attempts == 0:
                         try:
                             from utils.ytdl import get_stream_url
-                            new_url = await get_stream_url(track.web_url)
+                            if track.web_url and str(track.web_url).startswith(("http://", "https://")):
+                                new_url = await get_stream_url(track.web_url)
+                            else:
+                                new_url = None
                             if new_url and new_url != track.stream_url:
                                 track.stream_url = new_url
                                 source = self._create_source(track.stream_url)
@@ -226,7 +245,7 @@ class MusicManager:
 
                 # Pokud šlo o lokální temp soubor, po dohrání ho smaž
                 try:
-                    if track and track.stream_url and os.path.isfile(track.stream_url):
+                    if track and track.stream_url and _is_temp_file(track.stream_url):
                         os.remove(track.stream_url)
                 except Exception:
                     pass
