@@ -46,14 +46,7 @@ class HorsiNezModrej(commands.Cog):
 	@app_commands.describe(obrazek="Obrázek, který se vloží pod šablonu")
 	async def horsinezmodrej(self, interaction: discord.Interaction, obrazek: discord.Attachment):
 		# Lazy import so the bot can start even if Pillow isn't installed.
-		try:
-			from PIL import Image  # type: ignore
-		except Exception:
-			await interaction.response.send_message(
-				"Chybí knihovna Pillow. Nainstaluj ji příkazem `pip install pillow`.",
-				ephemeral=True,
-			)
-			return
+		from PIL import Image  # type: ignore
 
 		if not obrazek.content_type or not obrazek.content_type.startswith("image/"):
 			await interaction.response.send_message("Pošli prosím obrázek (PNG/JPG/WebP…).", ephemeral=True)
@@ -71,9 +64,8 @@ class HorsiNezModrej(commands.Cog):
 		# Fit background to overlay size
 		# Transparent rectangle (top-left): 452x479 at (0,0)
 		# User image should be fitted ONLY into this region.
-		try:
-			bg = Image.new("RGBA", overlay.size, (0, 0, 0, 0))
-			_paste_cover(user_img, bg, (0, 0, 452, 479))
+		bg = Image.new("RGBA", overlay.size, (0, 0, 0, 0))
+		_paste_cover(user_img, bg, (0, 0, 452, 479))
 
 		# Composite overlay on top (uses overlay alpha)
 		try:
