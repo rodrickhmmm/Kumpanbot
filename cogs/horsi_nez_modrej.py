@@ -48,8 +48,8 @@ def _fit_text(ImageDraw, ImageFont, text: str, box_w: int, box_h: int):
     if not text:
         return None, ""
     min_size = 8
-        # Allow font to be up to 1.5× box height for maximum visibility
-        max_size = max(min_size, int(box_h * 1.5))
+    # Allow font to be up to 1.5× box height for maximum visibility
+    max_size = max(min_size, int(box_h * 1.5))
     pad_w = 6
     pad_h = 4
     max_w = max(1, box_w - pad_w)
