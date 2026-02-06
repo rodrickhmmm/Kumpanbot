@@ -191,21 +191,47 @@ class Play(commands.Cog):
         # Check if user has the specific ID and send message
         if ctx.author.id == 1150085087451435102:
             await ctx.reply("Ty nemůžeš použít tento příkaz")
-        
-        if not query:
-            return await ctx.reply("Použij: `k!hraj <název skladby>` nebo `k!hraj <YouTube/SoundCloud odkaz>`")
+            return
 
         mgr = get_manager(self.bot)
+
+        # Pokud je přiložen audio soubor, přehraj ho
+        if ctx.message.attachments:
+            attachment = ctx.message.attachments[0]
+            # Zkontroluj, jestli je to audio soubor podle content_type nebo přípony
+            if (attachment.content_type and attachment.content_type.startswith("audio")) or attachment.filename.lower().endswith((".mp3", ".wav", ".ogg", ".m4a", ".flac")):
+                await mgr.ensure_voice(ctx)
+                # Stáhni soubor do paměti
+                file_bytes = await attachment.read()
+                # Ulož do dočasného souboru
+                import tempfile
+                import os
+                with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(attachment.filename)[1]) as tmp:
+                    tmp.write(file_bytes)
+                    tmp_path = tmp.name
+                # Vytvoř Track s lokální cestou
+                track = Track(
+                    title=attachment.filename,
+                    url=attachment.url,
+                    stream_url=tmp_path,
+                    requested_by=ctx.author,
+                    web_url=attachment.url,
+                    thumbnail=None
+                )
+                await mgr.add_track(ctx, track)
+                await ctx.reply(f"🎵 Přidán audio soubor: **{attachment.filename}**")
+                return
+
+        if not query:
+            return await ctx.reply("Použij: `k!hraj <název skladby>` nebo `k!hraj <YouTube/SoundCloud odkaz>` nebo přilož audio soubor.")
 
         # Direct link (YouTube or SoundCloud)
         if query.startswith(("http://", "https://")):
             await mgr.ensure_voice(ctx)
-            
             # Get full track info (title, thumbnail, stream URL in one call)
             track_info = await get_track_info(query)
             if not track_info or not track_info.get("stream_url"):
                 return await ctx.reply("Nemůžu získat stream z tohoto odkazu.")
-            
             track = Track(
                 title=track_info.get("title") or "Neznámá skladba",
                 url=query,
