@@ -29,19 +29,17 @@ def _paste_cover(img, canvas, box: tuple[int, int, int, int]):
     canvas.paste(fitted, (int(left), int(top)))
 
 def _load_font(ImageFont, size: int):
-    candidates = [
-        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
-        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-        "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
-        "/usr/share/fonts/truetype/freefont/FreeSans.ttf",
-        "C:/Windows/Fonts/arial.ttf",
-        "C:/Windows/Fonts/Arial.ttf",
+    # Try YouTube Sans in repo root first
+    import os
+    yt_sans_paths = [
+        os.path.join(os.path.dirname(os.path.dirname(__file__)), "YouTubeSansBold.otf"),
     ]
-    for path in candidates:
-        try:
-            return ImageFont.truetype(path, size=size)
-        except Exception:
-            pass
+    for path in yt_sans_paths:
+        if os.path.isfile(path):
+            try:
+                return ImageFont.truetype(path, size=size)
+            except Exception:
+                pass
     return ImageFont.load_default()
 
 def _fit_text(ImageDraw, ImageFont, text: str, box_w: int, box_h: int):
@@ -125,7 +123,8 @@ class HorsiNezModrej(commands.Cog):
             th = bbox[3] - bbox[1]
             x = text_box[0] + (box_w - tw) // 2
             y = text_box[1] + (box_h - th) // 2
-            draw.text((x, y), final_text, font=font_obj, fill=(0, 0, 0, 255))
+            # Draw white text
+            draw.text((x, y), final_text, font=font_obj, fill=(255,255,255,255))
         else:
             overlay_with_text = overlay
         try:
