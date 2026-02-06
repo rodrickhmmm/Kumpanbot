@@ -16,12 +16,12 @@ COG_MODULES = [
     "hraj", "preskocit", "prestat", "pauzni", "pokracuj",
     "fronta", "nynihraje", "hlasitost", "pripoj", "odpoj",
     "smycka", "vycistitfrontu", "vratahosek",
-    # Běžné funkce (13-18)
+    # Běžné funkce (13-19)
     "ping", "citat", "narozeniny", "obejmout", "grok", "grokAImode",
-    # Admin příkazy (19-25)
+    "horsi_nez_modrej",
+    # Admin příkazy (20-26)
     "gulag", "antigulag", "obnovitymaty", "reakcnirole",
     "banmatymythic", "unbanmatymythic", "nacistprikazy",
-    "horsi_nez_modrej",
 ]
 
 class KumpanBot(commands.Bot):
@@ -82,7 +82,7 @@ description_commands = [
 ]
 
 
-# Admin příkazy (indexy 19-25)
+# Admin příkazy (indexy 20-26)
 admin_commands = [
     "Proště ho pošleš do gulagu, protože nikam jinam se takoví lidé nehodí",  # /gulag
     "Vrátí ho z gulagu",  # /antigulag
