@@ -57,29 +57,6 @@ async def on_command_error(ctx: commands.Context, error: commands.CommandError):
         await ctx.reply(msg)
     except Exception:
         await ctx.send(msg)
-    
-@bot.command(name="prikazy")
-async def help_cmd(ctx: commands.Context):
-    embed = discord.Embed(title="Kumpánovské příkazy", color=discord.Color.purple())
-    embed.set_thumbnail(url="https://images.uncyclomedia.co/necyklopedie/cs/thumb/f/f8/Frantisekreditel.jpg/250px-Frantisekreditel.jpg")
-    embed.add_field(name="můžeš buďto použít / a nebo k! k zadávání příkazů", value=" ", inline=False)
-    embed.add_field(name="/hraj <název|link>", value="Najde top 5 skladeb nebo přehraje hudbu z YouTube/SoundCloud odkazu", inline=False)
-    embed.add_field(name="/preskocit", value="Přeskoč aktuální hudbu", inline=False)
-    embed.add_field(name="/prestat", value="Zastav aktuální hudbu a vymaže frontu", inline=False)
-    embed.add_field(name="/pauzni", value="Pozastavit nebo Pokračovat v hraní hudby", inline=False)
-    embed.add_field(name="/smycka", value="Zapne/vypne loopování hudby", inline=False)
-    embed.add_field(name="/fronta", value="Zobrazí frontu", inline=False)
-    embed.add_field(name="/nynihraje", value="Právě hraje", inline=False)
-    embed.add_field(name="/hlasitost <0-200>", value="Hlasitost", inline=False)
-    embed.add_field(name="/pripoj / /odpoj", value="Přivolej bota do voicu / Leavne voice", inline=False)
-    embed.add_field(name="/ping", value="Zkontroluj aktuální odezvu bota v milisekundách", inline=False)
-    embed.add_field(name="/grok", value="Je toto pravda?", inline=False)
-    embed.add_field(name="/grokaimode", value="Grok ti vygeneruje ten nejvíc židovskej text automaticky (command: pravda/nepravda)", inline=False)
-    embed.add_field(name="─────────────────────────────────────────────", value=" ", inline= False)
-    embed.add_field(name="Maty Mythic má oficiální zákaz používat tohoto bota", value=" ", inline=False)
-    embed.add_field(name="Platí také oficiální zákaz na mongolskej heavy metal, indickej phonk, čínskej rap a českej rap", value=" ", inline=False)
-    embed.add_field(name="Jestli si nemyslíš že Vráťa Hošek je nejlepší, tak toho bota rovnou smaž", value=" ", inline=False)
-    await ctx.reply(embed=embed)
 
 description_commands = [
     "Přehraje skladbu podle názvu nebo odkazu z YouTubu nebo SoundCloudu",  # /hraj
@@ -170,19 +147,19 @@ maty = 1150085087451435102
 @bot.event
 async def on_member_join(member):
     pozdravy = [
-        "Čůs negře! {member.name}",
-        "Připojila se nějaká koninka s názvem {member.name}",
-        "Co je to tu za mldku {member.name} ?",
-        "Novej kumpán {member.name} (snad lepší jak Maty 🤞)"
+        f"Čůs negře! {member.name}",
+        f"Připojila se nějaká koninka s názvem {member.name}",
+        f"Co je to tu za mldku {member.name} ?",
+        f"Novej kumpán {member.name} (snad lepší jak Maty 🤞)"
     ]
 
     if member.id == maty:
         print(f"/unbanmatymythic")
-        cusnegre = f"/unbanmatymythic"
+        cusnegre = f"Někdo unbannul Matyho a on se připojil zpátky!!"
     else:
         poradi = random.randint(0,(len(pozdravy)-1))
         print(pozdravy[poradi])
-        cusnegre = pozdravy[poradi].format(member=member)
+        cusnegre = pozdravy[poradi]
     
     # Try to send DM to the new member
     try:
@@ -197,9 +174,11 @@ async def on_member_join(member):
         if channel:
             embed = discord.Embed(
                 title=f"Novej kumpán",
-                description=f"{cusnegre}",
+                description=cusnegre,
                 color=discord.Color.purple()
             )
+            embed.set_thumbnail(url=member.display_avatar.url)
+            embed.set_footer(text=f"Připojil se: {member.joined_at.strftime('%d.%m.%Y %H:%M:%S')}")
             await channel.send(embed=embed)
     except Exception as e:
         print(f"Chyba při posílání welcome zprávy: {e}")
@@ -207,15 +186,15 @@ async def on_member_join(member):
 @bot.event
 async def on_member_remove(member):
     odzdravy = [
-        "Koninka {member.name} odešla",
-        "{member.name} tahle mldka to leavla",
-        "Cigan {member.name} se vysral na kumpány"
+        f"Koninka {member.name} odešla",
+        f"{member.name} tahle mldka to leavla",
+        f"Cigan {member.name} se vysral na kumpány"
     ]
 
     poradi = random.randint(0,(len(odzdravy)-1))
     if member.id == maty:
         print(f"/banmatymythic")
-        papa = f"/banmatymythic"
+        papa = f"Ajtakrajta, někdo z debilů z KGB a GRU zabanoval Matyho"
     else:
         print(odzdravy[poradi].format(member=member))
         print(f"Koninka {member.name} odešla")
@@ -230,6 +209,8 @@ async def on_member_remove(member):
                 description=f"{papa}",
                 color=discord.Color.red()
             )
+            embed.set_thumbnail(url=member.display_avatar.url)
+            embed.set_footer(text=f"Odešel: {discord.utils.utcnow().strftime('%d.%m.%Y %H:%M:%S')}")
             await channel.send(embed=embed)
     except Exception as e:
         print(f"Chyba při posílání goodbye zprávy: {e}")
