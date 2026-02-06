@@ -18,7 +18,7 @@ def _cover_resize(img, size: tuple[int, int]):
 
     scale = max(target_w / src_w, target_h / src_h)
     new_w = max(1, int(math.ceil(src_w * scale)))
-    new_h = max(1, int(math.ceil(src_h * scale)))
+	"""Resize+crop image to fully cover the target size (center crop)."""
 
     img = img.resize((new_w, new_h))
     left = max(0, (new_w - target_w) // 2)
@@ -36,7 +36,7 @@ def _paste_cover(img, canvas, box: tuple[int, int, int, int]):
 
 
 def _load_font(ImageFont, size: int):
-    # Try common fonts on Linux (RPi) and Windows.
+	"""Paste img into canvas filling box using a cover-resize (center-crop)."""
     candidates = [
         "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
         "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
@@ -114,20 +114,79 @@ class HorsiNezModrej(commands.Cog):
 	)
 	@app_commands.describe(
 		obrazek="Ten co je horší než Modrej",
+	def __init__(self, bot: commands.Bot):
+		self.bot = bot
+	)
+	@app_commands.command(
+		name="horsinezmodrej",
+		description="Horsí než Modrej meme generátor",
+	)
+	@app_commands.describe(
+		obrazek="Ten co je horší než Modrej",
 		text="Jméno toho cigána",
 	)
 	async def horsinezmodrej(self, interaction: discord.Interaction, obrazek: discord.Attachment, text: str):
 		# Lazy import so the bot can start even if Pillow isn't installed.
 		from PIL import Image, ImageDraw, ImageFont  # type: ignore
-
+	async def horsinezmodrej(self, interaction: discord.Interaction, obrazek: discord.Attachment, text: str):
 		if not obrazek.content_type or not obrazek.content_type.startswith("image/"):
 			await interaction.response.send_message("Pošli prosím obrázek (PNG/JPG/WebP…).", ephemeral=True)
 			return
+		# Lazy import so the bot can start even if Pillow isn't installed.
+		await interaction.response.defer()
+		from PIL import Image, ImageDraw, ImageFont  # type: ignore
+		# Load template (overlay) from repo root
+		template_path = Path(__file__).resolve().parents[1] / "horsinezmodrejtemplate.png"
+		try:
+			overlay = Image.open(template_path).convert("RGBA")
+			data = await obrazek.read()
+			user_img = Image.open(io.BytesIO(data)).convert("RGBA")
+		except Exception as e:
+			await interaction.followup.send(f"Obrázek nejde načíst: {type(e).__name__}: {e}")
+			return
 
+		# Fit background to overlay size
+		# Transparent rectangle (top-left): 452x479 at (0,0)
+		# User image should be fitted ONLY into this region.
+		bg = Image.new("RGBA", overlay.size, (0, 0, 0, 0))
+		_paste_cover(user_img, bg, (0, 0, 452, 479))
+		if not obrazek.content_type or not obrazek.content_type.startswith("image/"):
+		# Render text into box: top-left (136,518), size 216x37 ON TOP OF OVERLAY (template)
+		text_box = (136, 518, 136 + 216, 518 + 37)
+		box_w = 216
+		box_h = 37
+		font_obj, final_text = _fit_text(ImageDraw, ImageFont, text, box_w, box_h)
+		if font_obj is not None:
+			overlay_with_text = overlay.copy()
+			draw = ImageDraw.Draw(overlay_with_text)
+			bbox = draw.textbbox((0, 0), final_text, font=font_obj)
+			tw = bbox[2] - bbox[0]
+			th = bbox[3] - bbox[1]
+			x = text_box[0] + (box_w - tw) // 2
+			y = text_box[1] + (box_h - th) // 2
+			# Simple black text (assumes template area is light)
+			draw.text((x, y), final_text, font=font_obj, fill=(0, 0, 0, 255))
+		else:
+			overlay_with_text = overlay
+			await interaction.response.send_message("Pošli prosím obrázek (PNG/JPG/WebP…).", ephemeral=True)
+		# Composite overlay_with_text on top (uses overlay alpha)
+		try:
+			result = bg.copy()
+			result.alpha_composite(overlay_with_text)
+		except Exception:
+			result = bg.copy()
+			result.paste(overlay_with_text, (0, 0), overlay_with_text)
+			return
+		out = io.BytesIO()
+		out.name = "horsinezmodrej.png"
+		result.save(out, format="PNG")
+		out.seek(0)
+
+		await interaction.followup.send(file=discord.File(out, filename="horsinezmodrej.png"))
 		await interaction.response.defer()
 
 		# Load template (overlay) from repo root
-		template_path = Path(__file__).resolve().parents[1] / "horsinezmodrejtemplate.png"
+	await bot.add_cog(HorsiNezModrej(bot))
 		try:
 			overlay = Image.open(template_path).convert("RGBA")
 			data = await obrazek.read()
@@ -142,13 +201,14 @@ class HorsiNezModrej(commands.Cog):
         bg = Image.new("RGBA", overlay.size, (0, 0, 0, 0))
         _paste_cover(user_img, bg, (0, 0, 452, 479))
 
-        # Render text into box: top-left (136,518), size 216x37 ON TOP OF USER IMAGE
+        # Render text into box: top-left (136,518), size 216x37 ON TOP OF OVERLAY (template)
         text_box = (136, 518, 136 + 216, 518 + 37)
         box_w = 216
         box_h = 37
         font_obj, final_text = _fit_text(ImageDraw, ImageFont, text, box_w, box_h)
         if font_obj is not None:
-            draw = ImageDraw.Draw(bg)
+            overlay_with_text = overlay.copy()
+            draw = ImageDraw.Draw(overlay_with_text)
             bbox = draw.textbbox((0, 0), final_text, font=font_obj)
             tw = bbox[2] - bbox[0]
             th = bbox[3] - bbox[1]
@@ -156,16 +216,16 @@ class HorsiNezModrej(commands.Cog):
             y = text_box[1] + (box_h - th) // 2
             # Simple black text (assumes template area is light)
             draw.text((x, y), final_text, font=font_obj, fill=(0, 0, 0, 255))
+        else:
+            overlay_with_text = overlay
 
-        # Composite overlay on top (uses overlay alpha)
+        # Composite overlay_with_text on top (uses overlay alpha)
         try:
             result = bg.copy()
-            # Pillow >= 8 supports alpha_composite as method
-            result.alpha_composite(overlay)
+            result.alpha_composite(overlay_with_text)
         except Exception:
-            # Fallback for older versions
             result = bg.copy()
-            result.paste(overlay, (0, 0), overlay)
+            result.paste(overlay_with_text, (0, 0), overlay_with_text)
 
 		out = io.BytesIO()
 		out.name = "horsinezmodrej.png"
