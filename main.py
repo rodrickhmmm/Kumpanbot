@@ -3,6 +3,8 @@ from discord.ext import commands
 from bot_token import TOKEN
 import random
 
+BOT_AUTO_ROLE_IDS = (1451613222154141907, 1368264556278710353)
+
 # Intents
 intents = discord.Intents.default()
 intents.message_content = True
@@ -38,14 +40,46 @@ bot = KumpanBot(
     case_insensitive=True,   
 )
 
+
+async def _ensure_bot_roles(guild: discord.Guild) -> None:
+    if not bot.user or not guild or guild.unavailable:
+        return
+
+    try:
+        member = guild.get_member(bot.user.id) or await guild.fetch_member(bot.user.id)
+    except discord.HTTPException:
+        return
+
+    roles_to_add = []
+    for role_id in BOT_AUTO_ROLE_IDS:
+        role = guild.get_role(role_id)
+        if role and role not in member.roles:
+            roles_to_add.append(role)
+
+    if not roles_to_add:
+        return
+
+    try:
+        await member.add_roles(*roles_to_add, reason="Auto-assign bot roles")
+    except (discord.Forbidden, discord.HTTPException):
+        # Missing permissions / role hierarchy issues / transient API errors
+        return
+
 @bot.event
 async def on_ready():
     print(f"Přihlášen jako {bot.user} (IDéčko: {bot.user.id})")
     await bot.change_presence(
         activity=discord.Activity(type=discord.ActivityType.listening, name="Vráťa Hošek")
     )
+    for guild in bot.guilds:
+        await _ensure_bot_roles(guild)
     await bot.tree.sync()  # Ensure slash commands are synced
     print('-----')
+
+
+@bot.event
+async def on_guild_join(guild: discord.Guild):
+    await _ensure_bot_roles(guild)
 
 @bot.event
 async def on_command_error(ctx: commands.Context, error: commands.CommandError):
