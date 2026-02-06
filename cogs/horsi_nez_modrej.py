@@ -110,22 +110,15 @@ class HorsiNezModrej(commands.Cog):
 
 	@app_commands.command(
 		name="horsinezmodrej",
-		description="Přidá tvůj obrázek pod šablonu (PNG s transparencí).",
+		description="Horsí než Modrej meme generátor",
 	)
-	@app_commands.describe(
-		obrazek="Obrázek, který se vloží pod šablonu",
-		text="Text do boxu (automaticky zmenší font když je dlouhý)",
-	)
-	async def horsinezmodrej(self, interaction: discord.Interaction, obrazek: discord.Attachment, text: str = ""):
+	       @app_commands.describe(
+		       obrazek="Ten co je horší než Modrej",
+		       text="Jméno toho cigána",
+	       )
+	       async def horsinezmodrej(self, interaction: discord.Interaction, obrazek: discord.Attachment, text: str):
 		# Lazy import so the bot can start even if Pillow isn't installed.
-		try:
-			from PIL import Image, ImageDraw, ImageFont  # type: ignore
-		except ModuleNotFoundError:
-			await interaction.response.send_message(
-				"Chybí knihovna Pillow (PIL). Admin musí doinstalovat `pillow` do venv: `pip install pillow`.",
-				ephemeral=True,
-			)
-			return
+		from PIL import Image, ImageDraw, ImageFont  # type: ignore
 
 		if not obrazek.content_type or not obrazek.content_type.startswith("image/"):
 			await interaction.response.send_message("Pošli prosím obrázek (PNG/JPG/WebP…).", ephemeral=True)
@@ -135,15 +128,12 @@ class HorsiNezModrej(commands.Cog):
 
 		# Load template (overlay) from repo root
 		template_path = Path(__file__).resolve().parents[1] / "horsinezmodrejtemplate.png"
-		if not template_path.exists():
-			await interaction.followup.send("Nemůžu najít šablonu `horsinezmodrejtemplate.png` v rootu repa.")
-			return
 		try:
 			overlay = Image.open(template_path).convert("RGBA")
 			data = await obrazek.read()
 			user_img = Image.open(io.BytesIO(data)).convert("RGBA")
 		except Exception as e:
-			await interaction.followup.send(f"Obrázek/šablona nejde načíst: {type(e).__name__}: {e}")
+			await interaction.followup.send(f"Obrázek nejde načíst: {type(e).__name__}: {e}")
 			return
 
 		# Fit background to overlay size
@@ -166,16 +156,17 @@ class HorsiNezModrej(commands.Cog):
 		text_box = (136, 518, 136 + 216, 518 + 37)
 		box_w = 216
 		box_h = 37
-		font_obj, final_text = _fit_text(ImageDraw, ImageFont, text, box_w, box_h)
-		if final_text and font_obj is not None:
-			draw = ImageDraw.Draw(result)
-			bbox = draw.textbbox((0, 0), final_text, font=font_obj)
-			tw = bbox[2] - bbox[0]
-			th = bbox[3] - bbox[1]
-			x = text_box[0] + (box_w - tw) // 2
-			y = text_box[1] + (box_h - th) // 2
-			# Simple black text (assumes template area is light)
-			draw.text((x, y), final_text, font=font_obj, fill=(0, 0, 0, 255))
+		       font_obj, final_text = _fit_text(ImageDraw, ImageFont, text, box_w, box_h)
+		       # Always render the text, even if empty string (should not happen, as text is now required)
+		       if font_obj is not None:
+			       draw = ImageDraw.Draw(result)
+			       bbox = draw.textbbox((0, 0), final_text, font=font_obj)
+			       tw = bbox[2] - bbox[0]
+			       th = bbox[3] - bbox[1]
+			       x = text_box[0] + (box_w - tw) // 2
+			       y = text_box[1] + (box_h - th) // 2
+			       # Simple black text (assumes template area is light)
+			       draw.text((x, y), final_text, font=font_obj, fill=(0, 0, 0, 255))
 
 		out = io.BytesIO()
 		out.name = "horsinezmodrej.png"

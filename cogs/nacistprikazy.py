@@ -11,7 +11,7 @@ class NacistPrikazy(commands.Cog):
 
 	@app_commands.command(name="nacistprikazy", description="Znovu načte (sync) slash příkazy na tomto serveru.")
 	@app_commands.default_permissions(administrator=True)
-	async def nacistprikazy_slash(self, interaction: discord.Interaction, globalni: bool = False):
+	async def nacistprikazy_slash(self, interaction: discord.Interaction):
 		# Must be used in a guild
 		if interaction.guild is None:
 			await interaction.response.send_message("Tenhle příkaz můžeš použít jen na serveru.", ephemeral=True)
