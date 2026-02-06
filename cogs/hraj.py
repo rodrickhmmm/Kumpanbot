@@ -103,29 +103,108 @@ def _read_local_metadata(path: Path):
     try:
         from mutagen import File as MutagenFile  # type: ignore
     except Exception:
+        # Fallback to ffprobe if installed
+        try:
+            import json
+            import subprocess
+
+            proc = subprocess.run(
+                [
+                    "ffprobe",
+                    "-v",
+                    "quiet",
+                    "-print_format",
+                    "json",
+                    "-show_format",
+                    "-show_streams",
+                    str(path),
+                ],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            if proc.stdout:
+                data = json.loads(proc.stdout)
+                fmt = (data or {}).get("format") or {}
+                tags = fmt.get("tags") or {}
+                # ffprobe tag keys vary by container; try common variants
+                meta["title"] = tags.get("title") or tags.get("TITLE")
+                meta["artist"] = tags.get("artist") or tags.get("ARTIST")
+                meta["album"] = tags.get("album") or tags.get("ALBUM")
+                dur = fmt.get("duration")
+                if dur:
+                    meta["duration"] = int(float(dur))
+        except Exception:
+            pass
         return meta
 
     try:
-        audio = MutagenFile(str(path), easy=True)
-        if not audio:
-            return meta
-
-        tags = getattr(audio, "tags", None) or {}
-
-        def first(key: str):
-            v = tags.get(key)
+        def _as_str(v):
+            if v is None:
+                return None
             if isinstance(v, (list, tuple)):
-                return v[0] if v else None
-            return v
+                v = v[0] if v else None
+            if v is None:
+                return None
+            try:
+                s = str(v).strip()
+                return s or None
+            except Exception:
+                return None
 
-        meta["title"] = first("title")
-        meta["artist"] = first("artist")
-        meta["album"] = first("album")
+        # 1) Easy tags first (works for most MP3/FLAC/M4A)
+        audio_easy = MutagenFile(str(path), easy=True)
+        if audio_easy:
+            tags = getattr(audio_easy, "tags", None) or {}
+            meta["title"] = _as_str(tags.get("title"))
+            meta["artist"] = _as_str(tags.get("artist"))
+            meta["album"] = _as_str(tags.get("album"))
+            info = getattr(audio_easy, "info", None)
+            length = getattr(info, "length", None)
+            if length:
+                meta["duration"] = int(float(length))
 
-        info = getattr(audio, "info", None)
-        length = getattr(info, "length", None)
-        if length:
-            meta["duration"] = int(float(length))
+        # 2) If title still missing, try raw tags (ID3 frames etc.)
+        if not meta.get("title") or not meta.get("artist") or not meta.get("album"):
+            audio_raw = MutagenFile(str(path), easy=False)
+            if audio_raw:
+                tags = getattr(audio_raw, "tags", None)
+                # MP3 ID3
+                try:
+                    if tags and hasattr(tags, "getall"):
+                        if not meta.get("title"):
+                            tit2 = tags.getall("TIT2")
+                            if tit2:
+                                meta["title"] = _as_str(getattr(tit2[0], "text", None))
+                        if not meta.get("artist"):
+                            tpe1 = tags.getall("TPE1")
+                            if tpe1:
+                                meta["artist"] = _as_str(getattr(tpe1[0], "text", None))
+                        if not meta.get("album"):
+                            talb = tags.getall("TALB")
+                            if talb:
+                                meta["album"] = _as_str(getattr(talb[0], "text", None))
+                except Exception:
+                    pass
+
+                # MP4/M4A atoms / generic mapping
+                try:
+                    if tags and hasattr(tags, "get"):
+                        if not meta.get("title"):
+                            meta["title"] = _as_str(tags.get("\xa9nam") or tags.get("TITLE"))
+                        if not meta.get("artist"):
+                            meta["artist"] = _as_str(tags.get("\xa9ART") or tags.get("ARTIST"))
+                        if not meta.get("album"):
+                            meta["album"] = _as_str(tags.get("\xa9alb") or tags.get("ALBUM"))
+                except Exception:
+                    pass
+
+                # Duration fallback from raw info
+                if not meta.get("duration"):
+                    info = getattr(audio_raw, "info", None)
+                    length = getattr(info, "length", None)
+                    if length:
+                        meta["duration"] = int(float(length))
     except Exception:
         return meta
 
