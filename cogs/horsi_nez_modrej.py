@@ -34,13 +34,17 @@ def _load_font(ImageFont, size: int):
     yt_sans_paths = [
         os.path.join(os.path.dirname(os.path.dirname(__file__)), "YouTubeSansBold.otf"),
     ]
+    font_debug = []
     for path in yt_sans_paths:
+        font_debug.append(f"Trying font: {path}")
         if os.path.isfile(path):
             try:
-                return ImageFont.truetype(path, size=size)
-            except Exception:
-                pass
-    return ImageFont.load_default()
+                font_debug.append(f"File exists: {path}")
+                return ImageFont.truetype(path, size=size), font_debug
+            except Exception as e:
+                font_debug.append(f"Failed to load {path}: {e}")
+    font_debug.append("Falling back to default font")
+    return ImageFont.load_default(), font_debug
 
 def _fit_text(ImageDraw, ImageFont, text: str, box_w: int, box_h: int):
     # Returns (font, final_text)
@@ -115,7 +119,52 @@ class HorsiNezModrej(commands.Cog):
         text_box = (136, 518, 136 + 216, 518 + 37)
         box_w = 216
         box_h = 37
-        font_obj, final_text = _fit_text(ImageDraw, ImageFont, text, box_w, box_h)
+        # Patch: debug font loading
+        def _fit_text_debug(ImageDraw, ImageFont, text: str, box_w: int, box_h: int):
+            text = (text or "").strip()
+            if not text:
+                return None, "", []
+            min_size = 8
+            max_size = max(min_size, int(box_h * 1.5))
+            pad_w = 6
+            pad_h = 4
+            max_w = max(1, box_w - pad_w)
+            max_h = max(1, box_h - pad_h)
+            dummy_img = __import__("PIL.Image").Image.new("RGBA", (1, 1), (0, 0, 0, 0))
+            draw = ImageDraw.Draw(dummy_img)
+            def text_fits(font_obj, s: str) -> bool:
+                bbox = draw.textbbox((0, 0), s, font=font_obj)
+                w = bbox[2] - bbox[0]
+                h = bbox[3] - bbox[1]
+                return w <= max_w and h <= max_h
+            best_font = None
+            font_debug = []
+            for size in range(max_size, min_size - 1, -1):
+                font_obj, debug = _load_font(ImageFont, size)
+                font_debug.extend(debug)
+                if text_fits(font_obj, text):
+                    best_font = font_obj
+                    return best_font, text, font_debug
+            font_obj, debug = _load_font(ImageFont, min_size)
+            font_debug.extend(debug)
+            if text_fits(font_obj, text):
+                return font_obj, text, font_debug
+            ellipsis = "…"
+            base = text
+            lo, hi = 0, len(base)
+            best = ""
+            while lo <= hi:
+                mid = (lo + hi) // 2
+                cand = (base[:mid].rstrip() + ellipsis) if mid < len(base) else base
+                if text_fits(font_obj, cand):
+                    best = cand
+                    lo = mid + 1
+                else:
+                    hi = mid - 1
+            return font_obj, best or ellipsis, font_debug
+
+        font_obj, final_text, font_debug = _fit_text_debug(ImageDraw, ImageFont, text, box_w, box_h)
+        font_debug_msg = '\n'.join(font_debug)
         if font_obj is not None:
             overlay_with_text = overlay.copy()
             draw = ImageDraw.Draw(overlay_with_text)
@@ -138,7 +187,7 @@ class HorsiNezModrej(commands.Cog):
         out.name = "horsinezmodrej.png"
         result.save(out, format="PNG")
         out.seek(0)
-        await interaction.followup.send(file=discord.File(out, filename="horsinezmodrej.png"))
+        await interaction.followup.send(content=f"Font debug info:\n```{font_debug_msg}```", file=discord.File(out, filename="horsinezmodrej.png"))
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(HorsiNezModrej(bot))
