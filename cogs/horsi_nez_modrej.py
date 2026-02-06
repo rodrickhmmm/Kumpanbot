@@ -31,9 +31,9 @@ def _paste_cover(img, canvas, box: tuple[int, int, int, int]):
 def _load_font(ImageFont, size: int):
     # Try YouTube Sans in repo root first
     import os
-    yt_sans_paths = [
-        os.path.join(os.path.dirname(os.path.dirname(__file__)), "YouTubeSansBold.otf"),
-    ]
+        yt_sans_paths = [
+            os.path.join(os.path.dirname(os.path.dirname(__file__)), "YouTubeSansBold.otf"),
+        ]
     for path in yt_sans_paths:
         if os.path.isfile(path):
             try:
@@ -48,7 +48,8 @@ def _fit_text(ImageDraw, ImageFont, text: str, box_w: int, box_h: int):
     if not text:
         return None, ""
     min_size = 8
-    max_size = max(min_size, box_h)
+        # Allow font to be up to 1.5× box height for maximum visibility
+        max_size = max(min_size, int(box_h * 1.5))
     pad_w = 6
     pad_h = 4
     max_w = max(1, box_w - pad_w)
