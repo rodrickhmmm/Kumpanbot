@@ -221,15 +221,11 @@ class HorsiNezModrej(commands.Cog):
         if font_obj is not None:
             overlay_with_text = overlay.copy()
             draw = ImageDraw.Draw(overlay_with_text)
-            bbox = draw.textbbox((0, 0), final_text2, font=font_obj)
-            tw = bbox[2] - bbox[0]
-            th = bbox[3] - bbox[1]
-            x = text_box[0] + (box_w - tw) // 2
-            # Center text baseline, not just top
-            y = text_box[1] + (box_h - th) // 2 - bbox[1]
-            y = max(text_box[1], min(y, text_box[1] + box_h - th))
-            # Draw white text
-            draw.text((x, y), final_text2, font=font_obj, fill=(255,255,255,255))
+            # Center of the text box
+            center_x = text_box[0] + box_w // 2
+            center_y = text_box[1] + box_h // 2
+            # Draw white text, centered
+            draw.text((center_x, center_y), final_text2, font=font_obj, fill=(255,255,255,255), anchor="mm")
         else:
             overlay_with_text = overlay
         try:
