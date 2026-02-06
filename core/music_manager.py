@@ -1,5 +1,6 @@
 # core/music_manager.py
 import asyncio
+import os
 from typing import Optional, Deque, Dict
 from collections import deque
 import discord
@@ -88,9 +89,15 @@ class MusicManager:
                         raise commands.CommandError(f"Nemůžu se připojit do voice channelu. Zkus to znovu.")
 
     def _create_source(self, stream_url: str) -> discord.PCMVolumeTransformer:
+        # Reconnect flags jsou vhodné pro HTTP streamy, ale pro lokální soubory
+        # můžou dělat neplechu. Pro lokální soubory použij jen -nostdin.
+        before_opts = FFMPEG_BEFORE_OPTS
+        if stream_url and not stream_url.startswith(("http://", "https://")):
+            before_opts = "-nostdin"
+
         audio = discord.FFmpegPCMAudio(
             stream_url,
-            before_options=FFMPEG_BEFORE_OPTS,
+            before_options=before_opts,
             options=FFMPEG_OPTS
         )
         src = discord.PCMVolumeTransformer(audio)
@@ -216,6 +223,13 @@ class MusicManager:
                 # Reset skip flag AFTER re-queue check
                 # This way if we skipped, the flag prevents re-queue, then gets reset for next track
                 gm.skip_current = False
+
+                # Pokud šlo o lokální temp soubor, po dohrání ho smaž
+                try:
+                    if track and track.stream_url and os.path.isfile(track.stream_url):
+                        os.remove(track.stream_url)
+                except Exception:
+                    pass
 
                 gm.current = None
                 

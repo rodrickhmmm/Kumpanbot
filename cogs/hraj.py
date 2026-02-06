@@ -27,7 +27,16 @@ class Play(commands.Cog):
     from discord import app_commands
 
     @app_commands.command(name="hraj", description="Přehraje skladbu podle názvu nebo odkazu (YouTube, SoundCloud).")
-    async def play_slash(self, interaction: discord.Interaction, skladba: str):
+    @app_commands.describe(
+        skladba="Název / odkaz (YouTube, SoundCloud)",
+        soubor="Audio soubor (mp3/wav/ogg/m4a/flac)"
+    )
+    async def play_slash(
+        self,
+        interaction: discord.Interaction,
+        skladba: Optional[str] = None,
+        soubor: Optional[discord.Attachment] = None,
+    ):
         user = interaction.user
         await interaction.response.defer()
         
@@ -40,6 +49,48 @@ class Play(commands.Cog):
             await interaction.followup.send("Tenhle příkaz můžeš poslat jen na Mým Kumpánům.", ephemeral=True)
             return
         mgr = get_manager(self.bot)
+
+        # Pokud je přiložen audio soubor, přehraj ho (slash command attachments)
+        if soubor is not None:
+            is_audio = False
+            if soubor.content_type and soubor.content_type.startswith("audio"):
+                is_audio = True
+            elif soubor.filename and soubor.filename.lower().endswith((".mp3", ".wav", ".ogg", ".m4a", ".flac")):
+                is_audio = True
+
+            if not is_audio:
+                await interaction.followup.send("Tohle nevypadá jako audio soubor.", ephemeral=True)
+                return
+
+            await mgr.ensure_voice(interaction)
+            file_bytes = await soubor.read()
+            import tempfile
+            import os
+            suffix = os.path.splitext(soubor.filename or "audio")[1] or ".mp3"
+            with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+                tmp.write(file_bytes)
+                tmp_path = tmp.name
+
+            track = Track(
+                title=soubor.filename or "Audio soubor",
+                url=soubor.url,
+                stream_url=tmp_path,
+                requested_by=user,
+                web_url=soubor.url,
+                thumbnail=None,
+                uploader=None,
+                duration=None,
+            )
+            await mgr.add_track(interaction, track)
+            await interaction.followup.send(f"🎵 Přidán audio soubor: **{track.title}**")
+            return
+
+        if not skladba:
+            await interaction.followup.send(
+                "Použij `/hraj skladba:<název/odkaz>` nebo přilož `soubor`. ",
+                ephemeral=True,
+            )
+            return
         
         # Direct link (YouTube or SoundCloud)
         if skladba.startswith(("http://", "https://")):
