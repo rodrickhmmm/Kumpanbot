@@ -147,6 +147,31 @@ def fmt_duration(seconds) -> str:
     h, m = divmod(m, 60)
     return f"{h:d}:{m:02d}:{s:02d}" if h else f"{m:d}:{s:02d}"
 
+
+def _local_added_message(meta: dict, *, fallback_title: str = "") -> str:
+    title = (meta.get("title") or "").strip() if isinstance(meta, dict) else ""
+    artist = (meta.get("artist") or "").strip() if isinstance(meta, dict) else ""
+    album = (meta.get("album") or "").strip() if isinstance(meta, dict) else ""
+    duration = meta.get("duration") if isinstance(meta, dict) else None
+
+    if title:
+        msg = f"🎵 Přidána lokální skladba: **{title}**"
+    elif (fallback_title or "").strip():
+        msg = f"🎵 Přidána lokální skladba: **{fallback_title.strip()}**"
+    else:
+        msg = "🎵 Přidána lokální skladba (bez metadat)"
+
+    details = []
+    if artist:
+        details.append(f"Autor: **{artist}**")
+    if album:
+        details.append(f"Album: **{album}**")
+    if duration:
+        details.append(f"Délka: **{fmt_duration(duration)}**")
+    if details:
+        msg += "\n" + " • ".join(details)
+    return msg
+
 class Play(commands.Cog):
     from discord import app_commands
 
@@ -233,7 +258,7 @@ class Play(commands.Cog):
                     duration=meta.get("duration"),
                 )
                 await mgr.add_track(interaction, track)
-                await interaction.followup.send(f"🎵 Přidána lokální skladba: **{track.title}**")
+                await interaction.followup.send(_local_added_message(meta, fallback_title=local_path.stem))
                 return
         
         # Direct link (YouTube or SoundCloud)
@@ -437,7 +462,7 @@ class Play(commands.Cog):
                     duration=meta.get("duration"),
                 )
                 await mgr.add_track(ctx, track)
-                return await ctx.reply(f"🎵 Přidána lokální skladba: **{track.title}**")
+                return await ctx.reply(_local_added_message(meta, fallback_title=local_path.stem))
 
         # Direct link (YouTube or SoundCloud)
         if query.startswith(("http://", "https://")):
