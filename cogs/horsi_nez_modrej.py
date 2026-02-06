@@ -94,12 +94,12 @@ class HorsiNezModrej(commands.Cog):
 
     @app_commands.command(
         name="horsinezmodrej",
-        description="Horsí než Modrej meme generátor (obrázek+text nebo uživatel)",
+        description="Horsí než Modrej meme generátor (obrázek+text NEBO ping uživatele)",
     )
     @app_commands.describe(
-        obrazek="Obrázek (nepovinné, pokud zadáš uživatele)",
-        text="Text (nepovinné, pokud zadáš uživatele)",
-        uzivatel="Discord uživatel (volitelné, použije se jeho profilovka a jméno)",
+        obrazek="Obrázek (nepoužívej, pokud nezadáš uživatele, jestli používáš, musí být spolu s textem)",
+        text="Text (nepoužívej, pokud nezadáš uživatele, jestli používáš, musí být spolu s obrázkem)",
+        uzivatel="Discord uživatel (použije se jeho profilovka a jméno, nesmíš zadat obrázek a text)",
     )
     async def horsinezmodrej(
         self,
@@ -110,12 +110,27 @@ class HorsiNezModrej(commands.Cog):
     ):
         from PIL import Image, ImageDraw, ImageFont  # type: ignore
         await interaction.response.defer()
-        # Determine source image and text
+        # Input validation: exactly one mode must be used
         user_img = None
         final_text = None
         font_debug_msg = ""
-        # If user is provided, use their avatar and name
-        if uzivatel is not None:
+        if (obrazek and text) and not uzivatel:
+            # Obrázek + text
+            if not obrazek.content_type or not obrazek.content_type.startswith("image/"):
+                await interaction.followup.send("Pošli prosím obrázek (PNG/JPG/WebP…).")
+                return
+            try:
+                data = await obrazek.read()
+                user_img = Image.open(io.BytesIO(data)).convert("RGBA")
+            except Exception as e:
+                await interaction.followup.send(f"Obrázek nejde načíst: {type(e).__name__}: {e}")
+                return
+            final_text = text
+            if not final_text:
+                await interaction.followup.send("Text nesmí být prázdný.")
+                return
+        elif uzivatel and not (obrazek or text):
+            # Jen uživatel
             avatar_url = uzivatel.display_avatar.replace(format="png", size=512).url
             import aiohttp
             try:
@@ -131,26 +146,8 @@ class HorsiNezModrej(commands.Cog):
                 await interaction.followup.send(f"Chyba při stahování profilovky: {type(e).__name__}: {e}")
                 return
             final_text = uzivatel.display_name
-        # If image is provided, use it
-        elif obrazek is not None:
-            if not obrazek.content_type or not obrazek.content_type.startswith("image/"):
-                await interaction.followup.send("Pošli prosím obrázek (PNG/JPG/WebP…).")
-                return
-            try:
-                data = await obrazek.read()
-                user_img = Image.open(io.BytesIO(data)).convert("RGBA")
-            except Exception as e:
-                await interaction.followup.send(f"Obrázek nejde načíst: {type(e).__name__}: {e}")
-                return
-            final_text = text
-        # If neither, error
         else:
-            await interaction.followup.send("Musíš zadat buď obrázek a text, nebo uživatele.")
-            return
-
-        # If text is still None (shouldn't happen), error
-        if not final_text:
-            await interaction.followup.send("Text nesmí být prázdný.")
+            await interaction.followup.send("Zadej buď obrázek a text, NEBO pouze uživatele (ping). Nelze kombinovat ani nechat prázdné.")
             return
 
         template_path = Path(__file__).resolve().parents[1] / "horsinezmodrejtemplate.png"
