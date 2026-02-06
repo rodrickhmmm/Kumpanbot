@@ -136,37 +136,36 @@ class HorsiNezModrej(commands.Cog):
 			await interaction.followup.send(f"Obrázek nejde načíst: {type(e).__name__}: {e}")
 			return
 
-		# Fit background to overlay size
-		# Transparent rectangle (top-left): 452x479 at (0,0)
-		# User image should be fitted ONLY into this region.
-		bg = Image.new("RGBA", overlay.size, (0, 0, 0, 0))
-		_paste_cover(user_img, bg, (0, 0, 452, 479))
+        # Fit background to overlay size
+        # Transparent rectangle (top-left): 452x479 at (0,0)
+        # User image should be fitted ONLY into this region.
+        bg = Image.new("RGBA", overlay.size, (0, 0, 0, 0))
+        _paste_cover(user_img, bg, (0, 0, 452, 479))
 
-		# Composite overlay on top (uses overlay alpha)
-		try:
-			result = bg.copy()
-			# Pillow >= 8 supports alpha_composite as method
-			result.alpha_composite(overlay)
-		except Exception:
-			# Fallback for older versions
-			result = bg.copy()
-			result.paste(overlay, (0, 0), overlay)
+        # Render text into box: top-left (136,518), size 216x37 ON TOP OF USER IMAGE
+        text_box = (136, 518, 136 + 216, 518 + 37)
+        box_w = 216
+        box_h = 37
+        font_obj, final_text = _fit_text(ImageDraw, ImageFont, text, box_w, box_h)
+        if font_obj is not None:
+            draw = ImageDraw.Draw(bg)
+            bbox = draw.textbbox((0, 0), final_text, font=font_obj)
+            tw = bbox[2] - bbox[0]
+            th = bbox[3] - bbox[1]
+            x = text_box[0] + (box_w - tw) // 2
+            y = text_box[1] + (box_h - th) // 2
+            # Simple black text (assumes template area is light)
+            draw.text((x, y), final_text, font=font_obj, fill=(0, 0, 0, 255))
 
-		# Render text into box: top-left (136,518), size 216x37
-		text_box = (136, 518, 136 + 216, 518 + 37)
-		box_w = 216
-		box_h = 37
-		font_obj, final_text = _fit_text(ImageDraw, ImageFont, text, box_w, box_h)
-		# Always render the text, even if empty string (should not happen, as text is now required)
-		if font_obj is not None:
-			draw = ImageDraw.Draw(result)
-			bbox = draw.textbbox((0, 0), final_text, font=font_obj)
-			tw = bbox[2] - bbox[0]
-			th = bbox[3] - bbox[1]
-			x = text_box[0] + (box_w - tw) // 2
-			y = text_box[1] + (box_h - th) // 2
-			# Simple black text (assumes template area is light)
-			draw.text((x, y), final_text, font=font_obj, fill=(0, 0, 0, 255))
+        # Composite overlay on top (uses overlay alpha)
+        try:
+            result = bg.copy()
+            # Pillow >= 8 supports alpha_composite as method
+            result.alpha_composite(overlay)
+        except Exception:
+            # Fallback for older versions
+            result = bg.copy()
+            result.paste(overlay, (0, 0), overlay)
 
 		out = io.BytesIO()
 		out.name = "horsinezmodrej.png"
