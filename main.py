@@ -121,8 +121,8 @@ async def help_slash(interaction: discord.Interaction):
     if interaction.user.guild_permissions.administrator:
         embed3 = discord.Embed(title="🔒 Admin příkazy", color=discord.Color.red())
         embed3.set_thumbnail(url="https://images.uncyclomedia.co/necyklopedie/cs/d/db/Franti%C5%A1k%C5%AFv_%C5%99editelsk%C3%BD_sal%C3%A1t.jpg")
-        for i in range(21, 28):
-            embed3.add_field(name="/"+COG_MODULES[i], value=admin_commands[i-20], inline=False)
+        for cog_name, desc in zip(COG_MODULES[21:28], admin_commands):
+            embed3.add_field(name="/" + cog_name, value=desc, inline=False)
         embed3.add_field(name="─────────────────────────────────────────────", value=" ", inline= False)
         embed3.add_field(name="Tyto příkazy můžou používat jenom agenti KGB a GRU, nikdo jiný!!!", value=" ", inline=False)
         embeds.append(embed3)
