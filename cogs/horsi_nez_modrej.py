@@ -35,6 +35,75 @@ def _paste_cover(img, canvas, box: tuple[int, int, int, int]):
 	canvas.paste(fitted, (int(left), int(top)))
 
 
+def _load_font(ImageFont, size: int):
+	# Try common fonts on Linux (RPi) and Windows.
+	candidates = [
+		"/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+		"/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+		"/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+		"/usr/share/fonts/truetype/freefont/FreeSans.ttf",
+		"C:/Windows/Fonts/arial.ttf",
+		"C:/Windows/Fonts/Arial.ttf",
+	]
+	for path in candidates:
+		try:
+			return ImageFont.truetype(path, size=size)
+		except Exception:
+			pass
+	return ImageFont.load_default()
+
+
+def _fit_text(ImageDraw, ImageFont, text: str, box_w: int, box_h: int):
+	# Returns (font, final_text)
+	text = (text or "").strip()
+	if not text:
+		return None, ""
+
+	min_size = 8
+	max_size = max(min_size, box_h)  # start around box height
+	# Leave tiny padding inside the box
+	pad_w = 6
+	pad_h = 4
+	max_w = max(1, box_w - pad_w)
+	max_h = max(1, box_h - pad_h)
+
+	# Use a dummy draw for measurement
+	dummy_img = __import__("PIL.Image").Image.new("RGBA", (1, 1), (0, 0, 0, 0))
+	draw = ImageDraw.Draw(dummy_img)
+
+	def text_fits(font_obj, s: str) -> bool:
+		bbox = draw.textbbox((0, 0), s, font=font_obj)
+		w = bbox[2] - bbox[0]
+		h = bbox[3] - bbox[1]
+		return w <= max_w and h <= max_h
+
+	best_font = None
+	for size in range(max_size, min_size - 1, -1):
+		font_obj = _load_font(ImageFont, size)
+		if text_fits(font_obj, text):
+			best_font = font_obj
+			return best_font, text
+
+	# If nothing fits even at min font, truncate with ellipsis
+	font_obj = _load_font(ImageFont, min_size)
+	if text_fits(font_obj, text):
+		return font_obj, text
+
+	ellipsis = "…"
+	base = text
+	lo, hi = 0, len(base)
+	best = ""
+	while lo <= hi:
+		mid = (lo + hi) // 2
+		cand = (base[:mid].rstrip() + ellipsis) if mid < len(base) else base
+		if text_fits(font_obj, cand):
+			best = cand
+			lo = mid + 1
+		else:
+			hi = mid - 1
+	return font_obj, best or ellipsis
+
+
 class HorsiNezModrej(commands.Cog):
 	def __init__(self, bot: commands.Bot):
 		self.bot = bot
@@ -43,11 +112,14 @@ class HorsiNezModrej(commands.Cog):
 		name="horsinezmodrej",
 		description="Přidá tvůj obrázek pod šablonu (PNG s transparencí).",
 	)
-	@app_commands.describe(obrazek="Obrázek, který se vloží pod šablonu")
-	async def horsinezmodrej(self, interaction: discord.Interaction, obrazek: discord.Attachment):
+	@app_commands.describe(
+		obrazek="Obrázek, který se vloží pod šablonu",
+		text="Text do boxu (automaticky zmenší font když je dlouhý)",
+	)
+	async def horsinezmodrej(self, interaction: discord.Interaction, obrazek: discord.Attachment, text: str = ""):
 		# Lazy import so the bot can start even if Pillow isn't installed.
 		try:
-			from PIL import Image  # type: ignore
+			from PIL import Image, ImageDraw, ImageFont  # type: ignore
 		except ModuleNotFoundError:
 			await interaction.response.send_message(
 				"Chybí knihovna Pillow (PIL). Admin musí doinstalovat `pillow` do venv: `pip install pillow`.",
@@ -89,6 +161,21 @@ class HorsiNezModrej(commands.Cog):
 			# Fallback for older versions
 			result = bg.copy()
 			result.paste(overlay, (0, 0), overlay)
+
+		# Render text into box: top-left (136,518), size 216x37
+		text_box = (136, 518, 136 + 216, 518 + 37)
+		box_w = 216
+		box_h = 37
+		font_obj, final_text = _fit_text(ImageDraw, ImageFont, text, box_w, box_h)
+		if final_text and font_obj is not None:
+			draw = ImageDraw.Draw(result)
+			bbox = draw.textbbox((0, 0), final_text, font=font_obj)
+			tw = bbox[2] - bbox[0]
+			th = bbox[3] - bbox[1]
+			x = text_box[0] + (box_w - tw) // 2
+			y = text_box[1] + (box_h - th) // 2
+			# Simple black text (assumes template area is light)
+			draw.text((x, y), final_text, font=font_obj, fill=(0, 0, 0, 255))
 
 		out = io.BytesIO()
 		out.name = "horsinezmodrej.png"

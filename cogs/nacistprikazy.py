@@ -11,7 +11,6 @@ class NacistPrikazy(commands.Cog):
 
 	@app_commands.command(name="nacistprikazy", description="Znovu načte (sync) slash příkazy na tomto serveru.")
 	@app_commands.default_permissions(administrator=True)
-	@app_commands.describe(globalni="Když True, syncne i globálně (může se propsat až za delší dobu)")
 	async def nacistprikazy_slash(self, interaction: discord.Interaction, globalni: bool = False):
 		# Must be used in a guild
 		if interaction.guild is None:
@@ -32,16 +31,6 @@ class NacistPrikazy(commands.Cog):
 		except Exception as e:
 			await interaction.followup.send(f"Nepodařilo se smazat serverové příkazy: {type(e).__name__}: {e}", ephemeral=True)
 			return
-
-		# 2) Volitelně udělej "hard reset" globálních příkazů (POZOR: ovlivní všechny servery)
-		extra = ""
-		if globalni:
-			try:
-				self.bot.tree.clear_commands(guild=None)
-				await self.bot.tree.sync()
-				extra += "\nGlobální příkazy byly smazány."
-			except Exception as e:
-				extra += f"\nGlobální smazání se nepovedlo: {type(e).__name__}: {e}"
 
 		# 3) Sync globálních příkazů (bez vytváření guild kopií => žádné duplicity)
 		try:

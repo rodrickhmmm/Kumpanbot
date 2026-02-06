@@ -1,14 +1,13 @@
 #!/bin/bash
 
 sudo apt update
-sudo apt upgrade
+sudo apt upgrade -y
 sudo apt install python3 python3-venv ffmpeg nano -y
 
 python3 -m venv venv
 source venv/bin/activate
-python3 -m pip install --upgrade discord.py
-python3 -m pip install yt-dlp ffmpeg ffprobe PyNaCl
-python3 -m pip install pillow
+pip install --upgrade discord.py
+pip install yt-dlp ffmpeg ffprobe PyNaCl pillow
 echo "All required packages have been installed."
 clear
 read -s -p "Enter your token: " TOKEN
