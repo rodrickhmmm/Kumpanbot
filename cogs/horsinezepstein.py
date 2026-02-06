@@ -230,10 +230,10 @@ class HorsiNezEpstein(commands.Cog):
             result = bg.copy()
             result.paste(overlay_with_text, (0, 0), overlay_with_text)
         out = io.BytesIO()
-        out.name = "horsinezsteinerout.png"
+        out.name = "horsinezepsteinout.png"
         result.save(out, format="PNG")
         out.seek(0)
-        await interaction.followup.send(file=discord.File(out, filename="horsinezsteinerout.png"))
+        await interaction.followup.send(file=discord.File(out, filename="horsinezepsteinout.png"))
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(HorsiNezEpstein(bot))
