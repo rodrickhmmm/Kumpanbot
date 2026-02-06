@@ -46,7 +46,14 @@ class HorsiNezModrej(commands.Cog):
 	@app_commands.describe(obrazek="Obrázek, který se vloží pod šablonu")
 	async def horsinezmodrej(self, interaction: discord.Interaction, obrazek: discord.Attachment):
 		# Lazy import so the bot can start even if Pillow isn't installed.
-		from PIL import Image  # type: ignore
+		try:
+			from PIL import Image  # type: ignore
+		except ModuleNotFoundError:
+			await interaction.response.send_message(
+				"Chybí knihovna Pillow (PIL). Admin musí doinstalovat `pillow` do venv: `pip install pillow`.",
+				ephemeral=True,
+			)
+			return
 
 		if not obrazek.content_type or not obrazek.content_type.startswith("image/"):
 			await interaction.response.send_message("Pošli prosím obrázek (PNG/JPG/WebP…).", ephemeral=True)
@@ -56,10 +63,16 @@ class HorsiNezModrej(commands.Cog):
 
 		# Load template (overlay) from repo root
 		template_path = Path(__file__).resolve().parents[1] / "horsinezmodrejtemplate.png"
-
-		overlay = Image.open(template_path).convert("RGBA")
-		data = await obrazek.read()
-		user_img = Image.open(io.BytesIO(data)).convert("RGBA")
+		if not template_path.exists():
+			await interaction.followup.send("Nemůžu najít šablonu `horsinezmodrejtemplate.png` v rootu repa.")
+			return
+		try:
+			overlay = Image.open(template_path).convert("RGBA")
+			data = await obrazek.read()
+			user_img = Image.open(io.BytesIO(data)).convert("RGBA")
+		except Exception as e:
+			await interaction.followup.send(f"Obrázek/šablona nejde načíst: {type(e).__name__}: {e}")
+			return
 
 		# Fit background to overlay size
 		# Transparent rectangle (top-left): 452x479 at (0,0)
