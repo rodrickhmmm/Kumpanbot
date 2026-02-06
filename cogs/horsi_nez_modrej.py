@@ -34,7 +34,17 @@ def _load_font(ImageFont, size: int):
     yt_sans_paths = [
         os.path.join(os.path.dirname(os.path.dirname(__file__)), "YouTubeSansBold.otf"),
     ]
-    return ImageFont.load_default()
+    font_debug = []
+    for path in yt_sans_paths:
+        font_debug.append(f"Trying font: {path}")
+        if os.path.isfile(path):
+            try:
+                font_debug.append(f"File exists: {path}")
+                return ImageFont.truetype(path, size=size), font_debug
+            except Exception as e:
+                font_debug.append(f"Failed to load {path}: {e}")
+    font_debug.append("Falling back to default font")
+    return ImageFont.load_default(), font_debug
 
 def _fit_text(ImageDraw, ImageFont, text: str, box_w: int, box_h: int):
     # Returns (font, final_text)
@@ -175,12 +185,20 @@ class HorsiNezModrej(commands.Cog):
             best_font = None
             font_debug = []
             for size in range(max_size, min_size - 1, -1):
-                font_obj, debug = _load_font(ImageFont, size)
+                font_result = _load_font(ImageFont, size)
+                if isinstance(font_result, tuple):
+                    font_obj, debug = font_result
+                else:
+                    font_obj, debug = font_result, []
                 font_debug.extend(debug)
                 if text_fits(font_obj, text):
                     best_font = font_obj
                     return best_font, text, font_debug
-            font_obj, debug = _load_font(ImageFont, min_size)
+            font_result = _load_font(ImageFont, min_size)
+            if isinstance(font_result, tuple):
+                font_obj, debug = font_result
+            else:
+                font_obj, debug = font_result, []
             font_debug.extend(debug)
             if text_fits(font_obj, text):
                 return font_obj, text, font_debug
