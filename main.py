@@ -12,14 +12,14 @@ intents.reactions = True
 intents.members = True
 
 COG_MODULES = [
-    # Hudební příkazy (0-12)
+    # Hudební příkazy (1-13)
     "hraj", "preskocit", "prestat", "pauzni", "pokracuj",
     "fronta", "nynihraje", "hlasitost", "pripoj", "odpoj",
     "smycka", "vycistitfrontu", "vratahosek",
-    # Běžné funkce (13-19)
+    # Běžné funkce (14-20)
     "ping", "citat", "narozeniny", "obejmout", "grok", "grokAImode",
     "horsi_nez_modrej",
-    # Admin příkazy (20-26)
+    # Admin příkazy (21-27)
     "gulag", "antigulag", "obnovitymaty", "reakcnirole",
     "banmatymythic", "unbanmatymythic", "nacistprikazy",
 ]
@@ -106,22 +106,22 @@ async def help_slash(interaction: discord.Interaction):
     embed1.add_field(name="─────────────────────────────────────────────", value=" ", inline= False)
     embed1.add_field(name="Platí také oficiální zákaz na mongolskej heavy metal, indickej phonk, čínskej rap a českej rap", value=" ", inline=False)
     
-    # Druhý embed - běžné funkce (13-18)
+    # Druhý embed - běžné funkce (13-19)
     embed2 = discord.Embed(title="⚙️ Kumpánovské příkazy - Další příkazy", color=0x835ee8)
     embed2.set_thumbnail(url="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSbS-MoygD4RCPEZpH3X7zhSf4QPOrgH25WWA&s")
-    for i in range(13, 19):
+    for i in range(14, 20):
         embed2.add_field(name="/"+COG_MODULES[i], value=description_commands[i], inline=False)
     embed2.add_field(name="─────────────────────────────────────────────", value=" ", inline= False)
     embed2.add_field(name="Maty Mythic má oficiální zákaz používat tohoto bota", value=" ", inline=False)
     embed2.add_field(name="Jestli si nemyslíš že Vráťa Hošek je nejlepší, tak toho bota rovnou smaž", value=" ", inline=False)
     
-    # Třetí embed - admin příkazy (19-25) pouze pro adminy
+    # Třetí embed - admin příkazy (20-26) pouze pro adminy
     embeds = [embed1, embed2]
     if interaction.user.guild_permissions.administrator:
         embed3 = discord.Embed(title="🔒 Admin příkazy", color=discord.Color.red())
         embed3.set_thumbnail(url="https://images.uncyclomedia.co/necyklopedie/cs/d/db/Franti%C5%A1k%C5%AFv_%C5%99editelsk%C3%BD_sal%C3%A1t.jpg")
-        for i in range(19, 26):
-            embed3.add_field(name="/"+COG_MODULES[i], value=admin_commands[i-19], inline=False)
+        for i in range(21, 27):
+            embed3.add_field(name="/"+COG_MODULES[i], value=admin_commands[i-20], inline=False)
         embed3.add_field(name="─────────────────────────────────────────────", value=" ", inline= False)
         embed3.add_field(name="Tyto příkazy můžou používat jenom agenti KGB a GRU, nikdo jiný!!!", value=" ", inline=False)
         embeds.append(embed3)
