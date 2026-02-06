@@ -93,6 +93,44 @@ def _find_local_track(query: str) -> Optional[Path]:
             return best_path
     return None
 
+
+def _read_local_metadata(path: Path):
+    """Best-effort metadata reader for local audio files.
+
+    Uses `mutagen` if available; returns a dict with keys: title, artist, album, duration.
+    """
+    meta = {"title": None, "artist": None, "album": None, "duration": None}
+    try:
+        from mutagen import File as MutagenFile  # type: ignore
+    except Exception:
+        return meta
+
+    try:
+        audio = MutagenFile(str(path), easy=True)
+        if not audio:
+            return meta
+
+        tags = getattr(audio, "tags", None) or {}
+
+        def first(key: str):
+            v = tags.get(key)
+            if isinstance(v, (list, tuple)):
+                return v[0] if v else None
+            return v
+
+        meta["title"] = first("title")
+        meta["artist"] = first("artist")
+        meta["album"] = first("album")
+
+        info = getattr(audio, "info", None)
+        length = getattr(info, "length", None)
+        if length:
+            meta["duration"] = int(float(length))
+    except Exception:
+        return meta
+
+    return meta
+
 def get_manager(bot: commands.Bot) -> MusicManager:
     if not hasattr(bot, "music"):
         bot.music = MusicManager(bot)
@@ -182,16 +220,17 @@ class Play(commands.Cog):
         if not skladba.startswith(("http://", "https://")):
             local_path = _find_local_track(skladba)
             if local_path is not None:
+                meta = _read_local_metadata(local_path)
                 await mgr.ensure_voice(interaction)
                 track = Track(
-                    title=local_path.stem,
+                    title=meta.get("title") or local_path.stem,
                     url=str(local_path),
                     stream_url=str(local_path),
                     requested_by=user,
                     web_url=str(local_path),
                     thumbnail=None,
-                    uploader=None,
-                    duration=None,
+                    uploader=meta.get("artist"),
+                    duration=meta.get("duration"),
                 )
                 await mgr.add_track(interaction, track)
                 await interaction.followup.send(f"🎵 Přidána lokální skladba: **{track.title}**")
@@ -385,14 +424,17 @@ class Play(commands.Cog):
         if not query.startswith(("http://", "https://")):
             local_path = _find_local_track(query)
             if local_path is not None:
+                meta = _read_local_metadata(local_path)
                 await mgr.ensure_voice(ctx)
                 track = Track(
-                    title=local_path.stem,
+                    title=meta.get("title") or local_path.stem,
                     url=str(local_path),
                     stream_url=str(local_path),
                     requested_by=ctx.author,
                     web_url=str(local_path),
                     thumbnail=None,
+                    uploader=meta.get("artist"),
+                    duration=meta.get("duration"),
                 )
                 await mgr.add_track(ctx, track)
                 return await ctx.reply(f"🎵 Přidána lokální skladba: **{track.title}**")
