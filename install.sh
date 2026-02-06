@@ -8,6 +8,7 @@ python3 -m venv venv
 source venv/bin/activate
 python3 -m pip install --upgrade discord.py
 python3 -m pip install yt-dlp ffmpeg ffprobe PyNaCl
+python3 -m pip install pillow
 echo "All required packages have been installed."
 clear
 read -s -p "Enter your token: " TOKEN

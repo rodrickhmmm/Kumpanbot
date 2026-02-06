@@ -20,7 +20,8 @@ COG_MODULES = [
     "ping", "citat", "narozeniny", "obejmout", "grok", "grokAImode",
     # Admin příkazy (19-25)
     "gulag", "antigulag", "obnovitymaty", "reakcnirole",
-    "banmatymythic", "unbanmatymythic", "nacistprikazy"
+    "banmatymythic", "unbanmatymythic", "nacistprikazy",
+    "horsi_nez_modrej",
 ]
 
 class KumpanBot(commands.Bot):
@@ -100,6 +101,7 @@ description_commands = [
     "Obejmi někoho",  # /obejmout
     "Naše verze známého \"@Grok, je toto pravda?\"",  # /grok
     "Stejný jako /grok, ale tento ti vygeneruje automaticky text na základě jestli je zpráva na kterou se ptáš pravda nebo nepravda",  # /grokaimode
+    "Horší než modrej meme generátor",  # /horsi_nez_modrej
 ]
 
 
