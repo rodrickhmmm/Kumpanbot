@@ -51,11 +51,48 @@ class MusicManager:
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self._guilds: Dict[int, GuildMusic] = {}
+        self._voice_locks: Dict[int, asyncio.Lock] = {}
 
     def get_guild(self, guild: discord.Guild) -> GuildMusic:
         if guild.id not in self._guilds:
             self._guilds[guild.id] = GuildMusic(guild)
         return self._guilds[guild.id]
+
+    def _get_voice_lock(self, guild: discord.Guild) -> asyncio.Lock:
+        lock = self._voice_locks.get(guild.id)
+        if lock is None:
+            lock = asyncio.Lock()
+            self._voice_locks[guild.id] = lock
+        return lock
+
+    async def _disconnect_voice_client(self, voice_client: Optional[discord.VoiceClient]):
+        if not voice_client:
+            return
+        try:
+            await voice_client.disconnect(force=False)
+        except Exception:
+            try:
+                await voice_client.disconnect(force=True)
+            except Exception:
+                pass
+
+    async def _connect_voice_channel(self, channel: discord.VoiceChannel):
+        max_attempts = 3
+        last_error = None
+        for attempt in range(max_attempts):
+            try:
+                await channel.connect(timeout=60.0, reconnect=True, self_deaf=True)
+                return
+            except (discord.ClientException, discord.errors.ConnectionClosed, asyncio.TimeoutError) as exc:
+                last_error = exc
+                stale_voice_client = channel.guild.voice_client
+                if stale_voice_client:
+                    await self._disconnect_voice_client(stale_voice_client)
+                if attempt < max_attempts - 1:
+                    await asyncio.sleep(1.0 * (attempt + 1))
+                    continue
+                break
+        raise commands.CommandError("Nemůžu se připojit do voice channelu. Zkus to znovu.") from last_error
 
     async def ensure_voice(self, ctx_or_interaction, target_channel: Optional[discord.VoiceChannel] = None):
         # Support both commands.Context and discord.Interaction
@@ -74,35 +111,29 @@ class MusicManager:
         if not author or not isinstance(author, discord.Member) or not author.voice or not author.voice.channel:
             raise commands.CommandError("Nejdříve musíš být v chcallu ty voříšku!!!!")
         channel = target_channel or author.voice.channel
-        
-        # If already connected to the right channel, do nothing
-        if voice_client and voice_client.is_connected():
-            if voice_client.channel.id == channel.id:
+
+        async with self._get_voice_lock(guild):
+            voice_client = guild.voice_client if guild else None
+
+            # If already connected to the right channel, do nothing.
+            if voice_client and voice_client.is_connected() and voice_client.channel and voice_client.channel.id == channel.id:
                 return
-            # Move to new channel
-            try:
-                await voice_client.move_to(channel)
-            except Exception as e:
-                # If move fails, disconnect and reconnect
-                try:
-                    await voice_client.disconnect(force=False)
-                except Exception:
-                    pass
+
+            # If we have a stale or half-connected client, tear it down before retrying.
+            if voice_client and not voice_client.is_connected():
+                await self._disconnect_voice_client(voice_client)
                 await asyncio.sleep(0.5)
-                await channel.connect(timeout=60.0, reconnect=True, self_deaf=True)
-        else:
-            # Not connected, try to connect with retry
-            max_attempts = 3
-            for attempt in range(max_attempts):
+                voice_client = guild.voice_client if guild else None
+
+            if voice_client and voice_client.is_connected():
                 try:
-                    await channel.connect(timeout=60.0, reconnect=True, self_deaf=True)
-                    break
-                except discord.errors.ConnectionClosed as e:
-                    if attempt < max_attempts - 1:
-                        await asyncio.sleep(1.0 * (attempt + 1))
-                        continue
-                    else:
-                        raise commands.CommandError(f"Nemůžu se připojit do voice channelu. Zkus to znovu.")
+                    await voice_client.move_to(channel)
+                    return
+                except Exception:
+                    await self._disconnect_voice_client(voice_client)
+                    await asyncio.sleep(0.5)
+
+            await self._connect_voice_channel(channel)
 
     def _create_source(self, stream_url: str) -> discord.PCMVolumeTransformer:
         # Reconnect flags jsou vhodné pro HTTP streamy, ale pro lokální soubory
