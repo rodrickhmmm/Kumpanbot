@@ -6,8 +6,8 @@ sudo apt install python3 python3-venv ffmpeg nano libfreetype6-dev -y
 
 python3 -m venv venv
 source venv/bin/activate
-pip install --upgrade discord.py
-pip install yt-dlp ffmpeg ffprobe PyNaCl pillow
+python -m pip install --upgrade pip
+python -m pip install --upgrade "discord.py[voice]" yt-dlp ffmpeg ffprobe pillow
 echo "All required packages have been installed."
 clear
 read -s -p "Enter your token: " TOKEN
@@ -30,7 +30,8 @@ fi
 cat <<EOF | sudo tee /etc/systemd/system/$SERVICE_NAME.service
 [Unit]
 Description=Kumpanbot
-After=network.target
+Wants=network-online.target
+After=network-online.target
 
 [Service]
 Type=simple
