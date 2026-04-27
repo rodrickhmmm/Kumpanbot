@@ -18,10 +18,10 @@ COG_MODULES = [
     "hraj", "preskocit", "prestat", "pauzni", "pokracuj",
     "fronta", "nynihraje", "hlasitost", "pripoj", "odpoj",
     "smycka", "vycistitfrontu", "vratahosek",
-    # Běžné funkce (14-21)
-    "ping", "citat", "narozeniny", "obejmout", "grok", "grokAImode",
-    "horsinezmodrej", "horsinezepstein",
-    # Admin příkazy (22-28)
+    # Běžné funkce (14-24)
+    "ping", "citat", "narozeniny", "obejmout", "grok", "grokaimode",
+    "horsinezmodrej", "horsinezepstein", "masonahorulist", "masonahorupridat", "masonahoruodebrat",
+    # Admin příkazy (25-31)
     "gulag", "antigulag", "obnovitymaty", "reakcnirole",
     "banmatymythic", "unbanmatymythic", "nacistprikazy",
 ]
@@ -114,6 +114,9 @@ description_commands = [
     "Stejný jako /grok, ale tento ti vygeneruje automaticky text na základě jestli je zpráva na kterou se ptáš pravda nebo nepravda",  # /grokaimode
     "Horší než modrej meme generátor",  # /horsi_nez_modrej
     "Worse than Epstein meme generátor",  # /horsinezepstein
+    "Zobrazí seznam s lidmi, kteří budou na maso nahoru",  # /masonahorulist
+    "Přidá někoho do masa nahoru",  # /masonahorupridat
+    "Odebere někoho z masa nahoru",  # /masonahoruodebrat
 ]
 
 
@@ -144,7 +147,7 @@ async def help_slash(interaction: discord.Interaction):
     # Druhý embed - běžné funkce (13-19)
     embed2 = discord.Embed(title="⚙️ Kumpánovské příkazy - Další příkazy", color=0x835ee8)
     embed2.set_thumbnail(url="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSbS-MoygD4RCPEZpH3X7zhSf4QPOrgH25WWA&s")
-    for i in range(13, 21):
+    for i in range(13, 24):
         embed2.add_field(name="/"+COG_MODULES[i], value=description_commands[i], inline=False)
     embed2.add_field(name="─────────────────────────────────────────────", value=" ", inline= False)
     embed2.add_field(name="Maty Mythic má oficiální zákaz používat tohoto bota", value=" ", inline=False)
@@ -155,7 +158,7 @@ async def help_slash(interaction: discord.Interaction):
     if interaction.user.guild_permissions.administrator:
         embed3 = discord.Embed(title="🔒 Admin příkazy", color=discord.Color.red())
         embed3.set_thumbnail(url="https://images.uncyclomedia.co/necyklopedie/cs/d/db/Franti%C5%A1k%C5%AFv_%C5%99editelsk%C3%BD_sal%C3%A1t.jpg")
-        for cog_name, desc in zip(COG_MODULES[21:28], admin_commands):
+        for cog_name, desc in zip(COG_MODULES[24:31], admin_commands):
             embed3.add_field(name="/" + cog_name, value=desc, inline=False)
         embed3.add_field(name="─────────────────────────────────────────────", value=" ", inline= False)
         embed3.add_field(name="Tyto příkazy můžou používat jenom agenti KGB a GRU, nikdo jiný!!!", value=" ", inline=False)
