@@ -2,6 +2,8 @@ import discord
 from discord.ext import commands
 from bot_token import TOKEN
 import random
+import logging
+from pathlib import Path
 
 BOT_AUTO_ROLE_IDS = (1451613222154141907, 1368264556278710353)
 
@@ -28,9 +30,47 @@ COG_MODULES = [
 
 class KumpanBot(commands.Bot):
     async def setup_hook(self):
+        logging.basicConfig(
+            level=logging.INFO,
+            format="[%(asctime)s] [%(levelname)s] %(name)s: %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
+        )
+
+        logger = logging.getLogger("kumpanbot")
+        base_dir = Path(__file__).resolve().parent
+        cogs_dir = base_dir / "cogs"
+
+        loaded = 0
+        skipped = 0
+        failed = 0
+
         for name in COG_MODULES:
-            await self.load_extension(f"cogs.{name}")
-        # Sync slash commands instantly to your test guild
+            module_name = f"cogs.{name}"
+            expected_file = cogs_dir / f"{name}.py"
+
+            if not expected_file.exists():
+                skipped += 1
+                logger.warning("Skipping missing extension %s (expected %s)", module_name, expected_file)
+                continue
+
+            try:
+                await self.load_extension(module_name)
+                loaded += 1
+            except commands.ExtensionAlreadyLoaded:
+                loaded += 1
+                logger.info("Extension already loaded: %s", module_name)
+            except commands.ExtensionError:
+                failed += 1
+                logger.exception("Failed to load extension: %s", module_name)
+
+        logger.info(
+            "Extensions summary: loaded=%s skipped_missing=%s failed=%s",
+            loaded,
+            skipped,
+            failed,
+        )
+
+        # Sync slash commands (global sync)
         await self.tree.sync()
 
 bot = KumpanBot(
