@@ -50,7 +50,7 @@ class MasoNahoruManager:
         self,
         guild: discord.Guild,
         *,
-        title: str = "🥩 Maso nahoru seznam (Ocasníkovi listy)",
+        title: str = "🥩 Maso nahoru seznam (Ocasníkovy listy)",
         color: discord.Color = discord.Color.purple(),
         empty_text: str = "Seznam je zatím prázdný.",
     ) -> discord.Embed:
