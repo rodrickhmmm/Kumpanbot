@@ -26,6 +26,7 @@ COG_MODULES = [
     # Admin příkazy (25-31)
     "gulag", "antigulag", "obnovitymaty", "reakcnirole",
     "banmatymythic", "unbanmatymythic", "nacistprikazy",
+    "pravidla"
 ]
 
 class KumpanBot(commands.Bot):
@@ -168,7 +169,8 @@ admin_commands = [
     "Nastaví reakční roli",  # /reakcnirole
     "Zabanuje Matyho (Elitní reference :ticovedi:)",  # /banmatymythic
     "Odbanuje Matyho",  # /unbanmatymythic
-    "Znova přenačtě příkazy"  # /nacistprikazy
+    "Znova přenačtě příkazy",  # /nacistprikazy
+    "Zobrazí se pravidla"  # /prikazy
 ]
 
 # Dekorátor pro admin-only slash příkazy

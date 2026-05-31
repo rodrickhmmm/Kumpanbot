@@ -12,7 +12,12 @@ class Ping(commands.Cog):
     @app_commands.command(name="ping", description="Zkontroluje řinčákovu rychlost.")
     async def ping(self, interaction: discord.Interaction):
         latency_ms = round(self.bot.latency * 1000)
-        await interaction.response.send_message(f"Pong! Rychlost řinčáka: **{latency_ms}ms**")
+        embed = discord.Embed(
+            title="Pong!",
+            color=discord.Color.green(),
+            description=f"Rychlost řinčáka: **{latency_ms}ms**",
+        )
+        await interaction.response.send_message(embed=embed)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(Ping(bot))
