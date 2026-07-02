@@ -19,11 +19,11 @@ COG_MODULES = [
     # Hudební příkazy (1-13)
     "hraj", "preskocit", "prestat", "pauzni", "pokracuj",
     "fronta", "nynihraje", "hlasitost", "pripoj", "odpoj",
-    "smycka", "vycistitfrontu", "vratahosek",
-    # Běžné funkce (14-24)
+    "smycka", "vycistitfrontu", "vratahosek", "lyrics",
+    # Běžné funkce (14-25)
     "ping", "citat", "narozeniny", "obejmout", "grok", "grokaimode",
     "horsinezmodrej", "horsinezepstein", "masonahorulist", "masonahorupridat", "masonahoruodebrat",
-    # Admin příkazy (25-31)
+    # Admin příkazy (26-33)
     "gulag", "antigulag", "obnovitymaty", "reakcnirole",
     "banmatymythic", "unbanmatymythic", "nacistprikazy",
     "pravidla"
@@ -147,6 +147,7 @@ description_commands = [
     "Zapne/vypne opakování přehrávané skladby",  # /smycka
     "Vyčistí frontu skladeb",  # /vycistitfrontu
     "Přehraje ten nejvíce peak playlist od toho nejvíc peak umělce",  # /vratahosek
+    "Vyhledá text dané písně a vypíše ho v embedu",  # /lyrics
     "Zkontroluje řinčákovu rychlost",  # /ping
     "Vytvoř citát pokud někdo řekl např. nějakou volovinu",  # /citat
     "Popřej někomu hodně štěstí zdraví k dnu tvého narození",  # /narozeniny
@@ -181,7 +182,7 @@ async def help_slash(interaction: discord.Interaction):
     # První embed - hudební příkazy (0-12)
     embed1 = discord.Embed(title="🎵 Kumpánovské příkazy - Hudba", color=discord.Color.purple())
     embed1.set_thumbnail(url="https://images.uncyclomedia.co/necyklopedie/cs/thumb/f/f8/Frantisekreditel.jpg/250px-Frantisekreditel.jpg")
-    for i in range(13):
+    for i in range(14):
         embed1.add_field(name="/"+COG_MODULES[i], value=description_commands[i], inline=False)
     embed1.add_field(name="─────────────────────────────────────────────", value=" ", inline= False)
     embed1.add_field(name="Platí také oficiální zákaz na mongolskej heavy metal, indickej phonk, čínskej rap a českej rap", value=" ", inline=False)
@@ -189,7 +190,7 @@ async def help_slash(interaction: discord.Interaction):
     # Druhý embed - běžné funkce (13-19)
     embed2 = discord.Embed(title="⚙️ Kumpánovské příkazy - Další příkazy", color=0x835ee8)
     embed2.set_thumbnail(url="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSbS-MoygD4RCPEZpH3X7zhSf4QPOrgH25WWA&s")
-    for i in range(13, 24):
+    for i in range(14, 25):
         embed2.add_field(name="/"+COG_MODULES[i], value=description_commands[i], inline=False)
     embed2.add_field(name="─────────────────────────────────────────────", value=" ", inline= False)
     embed2.add_field(name="Maty Mythic má oficiální zákaz používat tohoto bota", value=" ", inline=False)
@@ -200,7 +201,7 @@ async def help_slash(interaction: discord.Interaction):
     if interaction.user.guild_permissions.administrator:
         embed3 = discord.Embed(title="🔒 Admin příkazy", color=discord.Color.red())
         embed3.set_thumbnail(url="https://images.uncyclomedia.co/necyklopedie/cs/d/db/Franti%C5%A1k%C5%AFv_%C5%99editelsk%C3%BD_sal%C3%A1t.jpg")
-        for cog_name, desc in zip(COG_MODULES[24:31], admin_commands):
+        for cog_name, desc in zip(COG_MODULES[25:33], admin_commands):
             embed3.add_field(name="/" + cog_name, value=desc, inline=False)
         embed3.add_field(name="─────────────────────────────────────────────", value=" ", inline= False)
         embed3.add_field(name="Tyto příkazy můžou používat jenom agenti KGB a GRU, nikdo jiný!!!", value=" ", inline=False)
