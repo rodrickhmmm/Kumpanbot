@@ -1,9 +1,12 @@
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 from bot_token import TOKEN
 import random
 import logging
+import json
 from pathlib import Path
+from datetime import datetime, time as dt_time
+from zoneinfo import ZoneInfo
 
 BOT_AUTO_ROLE_IDS = (1451613222154141907, 1368264556278710353)
 
@@ -109,6 +112,9 @@ async def _ensure_bot_roles(guild: discord.Guild) -> None:
 @bot.event
 async def on_ready():
     print(f"Přihlášen jako {bot.user} (IDéčko: {bot.user.id})")
+    await birthday_checker()
+    if not birthday_checker.is_running():
+        birthday_checker.start()
     await bot.change_presence(
         activity=discord.Activity(type=discord.ActivityType.listening, name="Vráťa Hošek")
     )
@@ -222,6 +228,94 @@ async def about_slash(interaction: discord.Interaction):
 
 # Welcome channel ID - right-click channel and Copy ID (Developer mode must be on)
 WELCOME_CHANNEL_ID = 1366162083733049534
+BIRTHDAY_MESSAGE_CHANNEL_ID = 1366159725888016488
+BIRTHDAYS_FILE = Path(__file__).resolve().parent / "birthdays.json"
+PRAGUE_TZ = ZoneInfo("Europe/Prague")
+
+
+def load_birthdays() -> tuple[dict[int, tuple[int, int]], str | None]:
+    try:
+        with BIRTHDAYS_FILE.open(encoding="utf-8") as file:
+            data = json.load(file)
+    except (FileNotFoundError, json.JSONDecodeError, OSError):
+        return {}, None
+
+    birthdays = {}
+    for user_id, birthday in data.get("birthdays", {}).items():
+        try:
+            month, day = map(int, birthday.split("-"))
+            birthdays[int(user_id)] = (month, day)
+        except (AttributeError, TypeError, ValueError):
+            logging.getLogger("kumpanbot").warning(
+                "Ignoring invalid birthday entry for user %s", user_id
+            )
+    return birthdays, data.get("last_announcement")
+
+
+def save_last_birthday_announcement(announcement_date: str) -> None:
+    try:
+        with BIRTHDAYS_FILE.open(encoding="utf-8") as file:
+            data = json.load(file)
+    except (FileNotFoundError, json.JSONDecodeError, OSError):
+        data = {"birthdays": {}}
+
+    data["last_announcement"] = announcement_date
+    with BIRTHDAYS_FILE.open("w", encoding="utf-8") as file:
+        json.dump(data, file, indent=2, ensure_ascii=False)
+
+
+BIRTHDAYS, last_birthday_announcement = load_birthdays()
+
+
+@tasks.loop(time=dt_time(hour=9, minute=0, tzinfo=PRAGUE_TZ))
+async def birthday_checker() -> None:
+    global last_birthday_announcement
+
+    now = datetime.now(PRAGUE_TZ)
+    today = now.date().isoformat()
+    if last_birthday_announcement == today:
+        return
+
+    channel = bot.get_channel(BIRTHDAY_MESSAGE_CHANNEL_ID)
+    if not isinstance(channel, discord.TextChannel):
+        return
+
+    birthday_members = []
+    for user_id, birthday in BIRTHDAYS.items():
+        if birthday != (now.month, now.day):
+            continue
+        member = channel.guild.get_member(user_id)
+        if member is None:
+            try:
+                member = await channel.guild.fetch_member(user_id)
+            except discord.HTTPException:
+                continue
+        birthday_members.append(member)
+
+    if not birthday_members:
+        return
+
+    embed = discord.Embed(
+        title="Dnešní narozeniny",
+        description="\n".join(
+            f"Hodně štěstí, zdraví {member.mention}! Dnes máš narozeniny!"
+            for member in birthday_members
+        ),
+        color=discord.Color.gold(),
+    )
+    embed.set_footer(text=f"{now.strftime('%d.%m.%Y')}")
+
+    try:
+        await channel.send(embed=embed)
+    except (discord.Forbidden, discord.HTTPException):
+        return
+    last_birthday_announcement = today
+    save_last_birthday_announcement(today)
+
+
+@birthday_checker.before_loop
+async def before_birthday_checker() -> None:
+    await bot.wait_until_ready()
 
 maty = 1150085087451435102
 
